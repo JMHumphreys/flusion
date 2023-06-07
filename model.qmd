@@ -1,0 +1,191 @@
+---
+title: "F(l)usion Model"
+description: "Constructing formula and running the model."
+format:
+  html:
+    df-print: kable
+    code-fold: show
+    code-summary: "Hide code"
+    code-overflow: wrap
+    toc-title: Page Contents
+    toc: true
+    toc-depth: 2
+    number-sections: false
+    html-math-method: katex
+    css: styles.css
+    theme: flatly
+    toc-location: left
+    smooth-scroll: true
+editor_options: 
+  chunk_output_type: console
+---
+<style type="text/css">
+
+body, td {
+   font-size: 13pt;
+}
+code.r{
+  font-size: 11pt;
+}
+pre {
+  font-size: 11pt
+}
+</style>
+
+# Overview   
+Having completed data preprocessing and data organization, a formula is constructed and the model run.    
+     
+**Note:** This script requires that both data **Preprocessing** and **data organization** have already been completed with all resulting objects available in the working environment.    
+      
+        
+```{r warning=FALSE, message=FALSE,echo=FALSE}
+options(dplyr.summarise.inform = FALSE)
+
+#wrangling
+library(tidyverse)
+library(lubridate)
+library(data.table, include.only = "fread")
+library(cdcfluview)
+library(yaml)
+
+#spatial
+library(sp)
+library(sf)
+library(spdep)
+library(rgeos)
+library(igraph)
+library(maptools)
+library(mapproj)
+library(CovidCAR)
+#devtools::install_github("JMHumphreys/CovidCAR")
+
+#messages
+library(cli)
+
+#inference
+library(INLA)
+
+#Utilities
+source("./R/utilities.R")
+
+#Preprocessing  
+load("./data/dstacks_06072023.RData")
+```
+
+# Prior Specifications
+```{r}
+#PC Prior
+pcprior1 = list(prec = list(prior="pc.prec", param = c(1, 0.001)))
+
+#bym prior
+bym_hyper <- list(phi = list(prior = "pc", 
+                      param = c(0.5, 0.5)), 
+               prec = list(prior = "pc.prec", 
+                       param = c(1, 0.01)))  
+
+#iid prior
+pc_prec_iid <- list(theta = list(prior="pc.prec", 
+                                 param=c(0.5, 0.01)))
+
+#ar1 prior
+pc_cor_ar1 <- list(theta = list(prior = 'pccor1', 
+                                param = c(0.5, 0.5)))
+
+#rw2 prior
+pc_rw <- list(prec=list(prior="pc.prec", 
+                        param=c(0.5,0.01)))
+```
+
+
+# Joint Model Formula
+```{r eval=FALSE}
+Frm.1 = Y ~ -1 + intercept1 + #intercept for ILI submodel
+                 intercept2 + #intercept for NREVSS submodel
+                 intercept3 + #intercept for HHS submodel
+                   l.pop.ili + #log-population: could have been combined, but
+                   l.pop.nv +  #wanted to see if effect differd   
+                   l.pop.hhs + #by submodel
+                      f(Region.1.ili, # location index specific to ILI submodel
+                         model="bym2", #Besag-Mollie-York model (spatial + region IID)
+                         graph=J,      #neighborhood adjacency matrix
+                         constr=TRUE,  #enforce a zero-mean latent field
+                         group = year.ili, #Annual time steps,year-specific spatial fields
+                         control.group=list(model="ar1"), #order-1 autoregressive between annual fields
+                         hyper=bym_hyper) + #prior
+                      f(Region.1.nv,   # As above but specific to NREVSS submodel
+                         model="bym2",
+                         graph=J,
+                         constr=TRUE,
+                         group = year.nv.1, 
+                         control.group=list(model="ar1"),
+                         hyper=bym_hyper) + 
+                      f(Region.2.nv,   # Create a copy of ILI BYM model, and share it with NREVSS submodel
+                         copy="Region.1.ili", #what to copy
+                         group = year.nv.2,
+                         fixed=FALSE) +
+                      f(Region.1.hhs,  # Besag-Mollie-York model specific to HHS submodel
+                         model="bym2", #as above
+                         graph=J,
+                         constr=TRUE, 
+                         group = year.hhs.1,
+                         control.group=list(model="ar1"),
+                         hyper=bym_hyper) + 
+                      f(Region.2.hhs, # Create a copy of ILI BYM model, and share it with HHS submodel
+                         copy="Region.1.ili",
+                         group = year.hhs.2,
+                         fixed=FALSE) +
+                      f(Region.3.hhs,  # Create a copy of NREVSS BYM model, and share it with HHS submodel
+                         copy="Region.1.nv",
+                         group = year.hhs.3,
+                         fixed=FALSE) + 
+                      f(ts_week.1.nv, # Use model etimates from NREVSS submodel to identify seasonality          
+                         constr=TRUE,
+                         scale.model = TRUE,
+                         model="seasonal",
+                         season.length = 52, #guess at how many weeks between seasonal cycles
+                         hyper=pcprior1) +
+                      f(ts_week.2.nv,       # IID term to account for variation outside of          
+                         constr=TRUE,        # seasonal effect above
+                         model="iid",
+                         hyper=pc_prec_iid) +
+                      f(ts_week.c,          #  copy seasonal effect to HHS submodel
+                         copy = "ts_week.1.nv",
+                         fixed=FALSE) +
+                      f(ts_week.iid.c,      #  copy IID extra-seasonal effect to HHS submodel
+                         copy = "ts_week.2.nv",
+                         fixed=FALSE) +
+                      f(en_est.s,          # perform order-1random walk across all levels based         
+                         constr=TRUE,      # on the temporal pattern exhibited by the FluSurv data
+                         scale.model = TRUE,
+                         model="rw1",
+                         hyper=pc_rw)
+
+
+# Mean estimates for all 20 model parameters.  These were estimated by running a smaller, 5yr model. 
+# By providing these initial values, model run times can be accelerated and get better "convergence" (equivalent of)
+theta5 = c(-0.56686743, -2.10828061, -1.95713241,  0.06579743, -0.09814683,  2.61967616, -1.27387472,  0.19664533,  1.81029996,
+           -1.92052717, -0.69497717,  2.20580332,  5.19657440, -2.17964335, -2.24216194, -0.12524395,  0.60062266,  0.20796619,
+           0.63707468,  0.49558648)
+
+Joint.mod = inla(Frm.1, #formula from above
+      				 #num.threads = 8,
+      				 data = inla.stack.data(joint_stack), # combined DataStack with substacks for all submodels
+      				 family = c("gaussian", "gaussian","gaussian"), #responses are normal
+      				 verbose = TRUE, # print run process to screen
+      				 control.fixed = list(prec = 1, # proper intercept
+      									  prec.intercept = 1), 
+      				 control.predictor = list(
+      											 A = inla.stack.A(joint_stack), 
+      									 compute = TRUE, # include fitted values
+      										  link = 1), #default link function settings
+      				 control.mode = list(restart = TRUE, theta = theta5), #initial values above
+      				 control.inla = list(strategy="gaussian", #strategy to speed up
+      											       int.strategy = "eb"), #empirical Bayes (based on modes)
+      				 control.compute=list(dic = F, cpo = F, waic = F)) # these just slow the run down
+
+#save resulting model and inputs  
+#save(list=c("Joint.mod", "J", "joint_stack"), file="./runs/initial6.RData", version = 2)
+```
+
+
+# Next Step: Inspect Model results

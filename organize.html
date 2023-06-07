@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.335">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Formatting data as list() objects and DataStacks for model input.">
+
+<title>F(l)usion Data Organization</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="organize_files/libs/clipboard/clipboard.min.js"></script>
+<script src="organize_files/libs/quarto-html/quarto.js"></script>
+<script src="organize_files/libs/quarto-html/popper.min.js"></script>
+<script src="organize_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="organize_files/libs/quarto-html/anchor.min.js"></script>
+<link href="organize_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="organize_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="organize_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="organize_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="organize_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Page Contents</h2>
+   
+  <ul class="collapse">
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a>
+  <ul class="collapse">
+  <li><a href="#ili-datastack" id="toc-ili-datastack" class="nav-link" data-scroll-target="#ili-datastack">ILI DataStack</a></li>
+  <li><a href="#nrevss-set" id="toc-nrevss-set" class="nav-link" data-scroll-target="#nrevss-set">NREVSS Set</a></li>
+  <li><a href="#hhs-set" id="toc-hhs-set" class="nav-link" data-scroll-target="#hhs-set">HHS Set</a></li>
+  <li><a href="#join-datastacks" id="toc-join-datastacks" class="nav-link" data-scroll-target="#join-datastacks">Join Datastacks</a></li>
+  </ul></li>
+  <li><a href="#next-step-run-the-model" id="toc-next-step-run-the-model" class="nav-link" data-scroll-target="#next-step-run-the-model">Next Step: Run the Model</a></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">F(l)usion Data Organization</h1>
+</div>
+
+<div>
+  <div class="description">
+    Formatting data as list() objects and DataStacks for model input.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<style type="text/css">
+
+body, td {
+   font-size: 13pt;
+}
+code.r{
+  font-size: 11pt;
+}
+pre {
+  font-size: 11pt
+}
+</style>
+<section id="overview" class="level1">
+<h1>Overview</h1>
+<p>Organizing data for a three-part joint model can be complex. This script walks through <em>DataStack</em> construction where a DataStack is a list object that holds all data for model fitting. Because this is a three-part model, DataStacks will be created for each submodel (e.g., an ILI submodel, a NREVSS submodel, and a HHS submodel) then the three submodel DataStacks will be combined as a <em>joint_stack</em>. As part of DataStack construction, a three-part response/dependent variable will be specified as a three-column matrix.</p>
+<p><strong>Note:</strong> This script requires that data <strong>Preprocessing</strong> has already been completed and all <strong>Preprocessing</strong> objects are available in the working environment.</p>
+<div class="cell">
+
+</div>
+<section id="ili-datastack" class="level2">
+<h2 class="anchored" data-anchor-id="ili-datastack">ILI DataStack</h2>
+<p>The ILI model will occupy the base level of the joint model and pass <em>information</em> to both the middle level submodel (NREVSS) and the top level HHS submodel.</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>ilinet_full <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(ilinet_full) <span class="sc">%&gt;%</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">y_ili =</span> unweighted.s, <span class="co">#Response variable, logit transformed percentage of influenza-like illnesses.</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">l.pop.ili =</span> <span class="fu">log</span>(population), <span class="co">#log population size</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">Region.1.ili =</span> Region, <span class="co">#an identifier for each location (i.e., States and Territories)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">Region.2.ili =</span> Region,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">Region.3.ili =</span> Region,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">Region.4.ili =</span> Region,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">ts_week.1.ili =</span> ts_week, <span class="co">#integer time step for epiweeks 2010 to 2023-epiweek-22</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">ts_week.2.ili =</span> ts_week,</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">ts_week.3.ili =</span> ts_week,</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">ts_week.4.ili =</span> ts_week,</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>         <span class="at">state.ili =</span> abbreviation, <span class="co">#State abbreviations</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">year.ili =</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(year)), <span class="co">#integer time step for years</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>         <span class="at">year.ili.1 =</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(year)),</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>         <span class="at">year.ili.2 =</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(year)),</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>         <span class="at">year.ili.3 =</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(year)),</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>         <span class="at">source =</span> <span class="dv">1</span>) <span class="co">#just an ID to identify ILI data</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>ili.lst <span class="ot">=</span> <span class="fu">list</span>(<span class="fu">list</span>(<span class="at">intercept1 =</span> <span class="fu">rep</span>(<span class="dv">1</span>, <span class="fu">dim</span>(ilinet_full)[<span class="dv">1</span>])), <span class="co">#custom intercept</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>          <span class="fu">list</span>(<span class="at">l.pop.ili =</span> ilinet_full[,<span class="st">"l.pop.ili"</span>],  <span class="co">#log-population              </span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>               <span class="at">year.ili =</span> ilinet_full[,<span class="st">"year.ili"</span>],</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>               <span class="at">en_est.s =</span> ilinet_full[,<span class="st">"en_est.s"</span>], <span class="co">#amplitude of temporal trend in FluSurv cases</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>               <span class="at">year.ili.1 =</span> ilinet_full[,<span class="st">"year.ili.1"</span>],</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>               <span class="at">year.ili.2 =</span> ilinet_full[,<span class="st">"year.ili.2"</span>],</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>               <span class="at">year.ili.3 =</span> ilinet_full[,<span class="st">"year.ili.3"</span>],</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>               <span class="at">ts_week =</span> ilinet_full[,<span class="st">"ts_week.1.ili"</span>],</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>               <span class="at">ts_week.iid =</span> ilinet_full[,<span class="st">"ts_week.1.ili"</span>],</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>               <span class="at">ts_week.1.ili =</span> ilinet_full[,<span class="st">"ts_week.1.ili"</span>],</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>               <span class="at">ts_week.2.ili =</span> ilinet_full[,<span class="st">"ts_week.2.ili"</span>],</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>               <span class="at">ts_week.3.ili =</span> ilinet_full[,<span class="st">"ts_week.3.ili"</span>],</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region =</span> ilinet_full[,<span class="st">"Region.1.ili"</span>],</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.1 =</span> ilinet_full[,<span class="st">"Region.1.ili"</span>],</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.2 =</span> ilinet_full[,<span class="st">"Region.1.ili"</span>],</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.cross =</span> ilinet_full[,<span class="st">"Region.1.ili"</span>],</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.1.ili =</span> ilinet_full[,<span class="st">"Region.1.ili"</span>],</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.2.ili =</span> ilinet_full[,<span class="st">"Region.2.ili"</span>],</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.3.ili =</span> ilinet_full[,<span class="st">"Region.3.ili"</span>],</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.4.ili =</span> ilinet_full[,<span class="st">"Region.4.ili"</span>],</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>               <span class="at">st_int.ili =</span> ilinet_full[,<span class="st">"st_int"</span>], <span class="co">#State-Time interactions</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>               <span class="at">state.ili =</span> ilinet_full[,<span class="st">"state.ili"</span>],</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>               <span class="at">dsource =</span> ilinet_full[,<span class="st">"source"</span>]))</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="co"># The ILI DataStack</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>ili.stk <span class="ot">=</span> <span class="fu">inla.stack</span>(<span class="at">data =</span> <span class="fu">list</span>(<span class="at">Y =</span> <span class="fu">cbind</span>(ilinet_full<span class="sc">$</span>y_ili, <span class="cn">NA</span>, <span class="cn">NA</span>)), <span class="co">#base level response in 1st slot, NAs are placeholders for other two</span></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">A =</span> <span class="fu">list</span>(<span class="dv">1</span>,<span class="dv">1</span>),  <span class="co">#optional matrix object, not used in this analysis     </span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>                                <span class="at">effects =</span> ili.lst,    <span class="co"># list object created above with indices and variables   </span></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">tag =</span> <span class="st">"ili"</span>)      <span class="co">#arbitrary name/label to pull data later</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="nrevss-set" class="level2">
+<h2 class="anchored" data-anchor-id="nrevss-set">NREVSS Set</h2>
+<p>Similar to ILI DataStack above, creating one for the NREVSS submodel. Note that some variable names are the same as in the ILI DataStack (e.g., Region and st_int) BUT some are specific to this DataStack with a <em>.nv</em> designation: If a variable name is included in the joint model formula, it can only contribute to the submodels that also have it. This provides control such that some variables may be specific to one submodel or one DataStack, whereas other variables may be applicable to all submodels concurrently.</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>nrevss_full <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(nrevss_full) <span class="sc">%&gt;%</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">y_nrvs =</span> Apos.s, <span class="co">#confirmed positive influenza A, logit transformed percentage</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">l.pop.nv =</span> <span class="fu">log</span>(population),</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">Region.1.nv =</span> Region,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">Region.2.nv =</span> Region,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">Region.3.nv =</span> Region,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">Region.4.nv =</span> Region,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">ts_week.1.nv =</span> ts_week,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">ts_week.2.nv =</span> ts_week,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">ts_week.3.nv =</span> ts_week,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">ts_week.4.nv =</span> ts_week,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>         <span class="at">state.nv =</span> abbreviation,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">year.nv =</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(year)),</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>         <span class="at">year.nv.1 =</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(year)),</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>         <span class="at">year.nv.2 =</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(year)),</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>         <span class="at">year.nv.3 =</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(year)),</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>         <span class="at">source =</span> <span class="dv">2</span>)</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>nv.lst <span class="ot">=</span> <span class="fu">list</span>(<span class="fu">list</span>(<span class="at">intercept2 =</span> <span class="fu">rep</span>(<span class="dv">1</span>, <span class="fu">dim</span>(nrevss_full)[<span class="dv">1</span>])), </span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>          <span class="fu">list</span>(<span class="at">l.pop.nv =</span> nrevss_full[,<span class="st">"l.pop.nv"</span>], </span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>               <span class="at">en_est.s =</span> nrevss_full[,<span class="st">"en_est.s"</span>],</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>               <span class="at">year.nv =</span> nrevss_full[,<span class="st">"year.nv"</span>],</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>               <span class="at">year.nv.1 =</span> nrevss_full[,<span class="st">"year.nv.1"</span>],</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>               <span class="at">year.nv.2 =</span> nrevss_full[,<span class="st">"year.nv.2"</span>],</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>               <span class="at">year.nv.3 =</span> nrevss_full[,<span class="st">"year.nv.3"</span>],</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>               <span class="at">ts_week =</span> nrevss_full[,<span class="st">"ts_week.1.nv"</span>],</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>               <span class="at">ts_week.iid =</span> nrevss_full[,<span class="st">"ts_week.1.nv"</span>],</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>               <span class="at">ts_week.1.nv =</span> nrevss_full[,<span class="st">"ts_week.1.nv"</span>],</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>               <span class="at">ts_week.2.nv =</span> nrevss_full[,<span class="st">"ts_week.2.nv"</span>],</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>               <span class="at">ts_week.3.nv =</span> nrevss_full[,<span class="st">"ts_week.3.nv"</span>],</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region =</span> nrevss_full[,<span class="st">"Region.1.nv"</span>],</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.1 =</span> nrevss_full[,<span class="st">"Region.1.nv"</span>],</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.2 =</span> nrevss_full[,<span class="st">"Region.1.nv"</span>],</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.cross =</span> nrevss_full[,<span class="st">"Region.1.nv"</span>],</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.1.nv =</span> nrevss_full[,<span class="st">"Region.1.nv"</span>],</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.2.nv =</span> nrevss_full[,<span class="st">"Region.2.nv"</span>],</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.3.nv =</span> nrevss_full[,<span class="st">"Region.3.nv"</span>],</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.4.nv =</span> nrevss_full[,<span class="st">"Region.4.nv"</span>],</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>               <span class="at">st_int =</span> nrevss_full[,<span class="st">"st_int"</span>],</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>               <span class="at">state.nv =</span> nrevss_full[,<span class="st">"state.nv"</span>],</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>               <span class="at">dsource =</span> nrevss_full[,<span class="st">"source"</span>]))</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="co">#NREVSS DataStack</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>nv.stk <span class="ot">=</span> <span class="fu">inla.stack</span>(<span class="at">data =</span> <span class="fu">list</span>(<span class="at">Y =</span> <span class="fu">cbind</span>(<span class="cn">NA</span>, nrevss_full<span class="sc">$</span>y_nrvs, <span class="cn">NA</span>)), <span class="co">#NA in the first and last columns (for ILI and HHS responses)</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">A =</span> <span class="fu">list</span>(<span class="dv">1</span>,<span class="dv">1</span>),       </span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>                                <span class="at">effects =</span> nv.lst,        </span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">tag =</span> <span class="st">"nrvs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="hhs-set" class="level2">
+<h2 class="anchored" data-anchor-id="hhs-set">HHS Set</h2>
+<p>Much the same as the ILI and NREVVS DataStacks.</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>flu_HHS_full <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(flu_HHS_full) <span class="sc">%&gt;%</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">y_hhs =</span> <span class="fu">log</span>(hosp_inc<span class="fl">+0.0001</span>), <span class="co">#log hospital incidence (response variable)</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">l.pop.hhs =</span> <span class="fu">log</span>(population),</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">Region.1.hhs =</span> Region,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">Region.2.hhs =</span> Region,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">Region.3.hhs =</span> Region,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">Region.4.hhs =</span> Region,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">ts_week.1.hhs =</span> ts_week,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">ts_week.2.hhs =</span> ts_week,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">ts_week.3.hhs =</span> ts_week,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">ts_week.4.hhs =</span> ts_week,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>         <span class="at">state.hhs =</span> abbreviation,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">year.hhs =</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(year)),</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>         <span class="at">year.hhs.1 =</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(year)),</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>         <span class="at">year.hhs.2 =</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(year)),</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>         <span class="at">year.hhs.3 =</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(year)),</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>         <span class="at">source =</span> <span class="dv">3</span>)</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>hhs.lst <span class="ot">=</span> <span class="fu">list</span>(<span class="fu">list</span>(<span class="at">intercept3 =</span> <span class="fu">rep</span>(<span class="dv">1</span>, <span class="fu">dim</span>(flu_HHS_full)[<span class="dv">1</span>])), </span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>          <span class="fu">list</span>(<span class="at">l.pop.hhs =</span> flu_HHS_full[,<span class="st">"l.pop.hhs"</span>], </span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>               <span class="at">en_est.s =</span> flu_HHS_full[,<span class="st">"en_est.s"</span>],</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>               <span class="at">year.hhs =</span> flu_HHS_full[,<span class="st">"year.hhs"</span>],</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>               <span class="at">year.hhs.1 =</span> flu_HHS_full[,<span class="st">"year.hhs"</span>],</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>               <span class="at">year.hhs.2 =</span> flu_HHS_full[,<span class="st">"year.hhs"</span>],</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>               <span class="at">year.hhs.3 =</span> flu_HHS_full[,<span class="st">"year.hhs"</span>],</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>               <span class="at">ts_week.c =</span> flu_HHS_full[,<span class="st">"ts_week.1.hhs"</span>],</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>               <span class="at">ts_week.iid.c =</span> flu_HHS_full[,<span class="st">"ts_week.1.hhs"</span>],</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>               <span class="at">ts_week.1.hhs =</span> flu_HHS_full[,<span class="st">"ts_week.1.hhs"</span>],</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>               <span class="at">ts_week.2.hhs =</span> flu_HHS_full[,<span class="st">"ts_week.2.hhs"</span>],</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>               <span class="at">ts_week.3.hhs =</span> flu_HHS_full[,<span class="st">"ts_week.3.hhs"</span>],</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region =</span> flu_HHS_full[,<span class="st">"Region.1.hhs"</span>],</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.c =</span> flu_HHS_full[,<span class="st">"Region.1.hhs"</span>],</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.1.c =</span> flu_HHS_full[,<span class="st">"Region.1.hhs"</span>],</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.2.c =</span> flu_HHS_full[,<span class="st">"Region.1.hhs"</span>],</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.1.hhs =</span> flu_HHS_full[,<span class="st">"Region.1.hhs"</span>],</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.2.hhs =</span> flu_HHS_full[,<span class="st">"Region.2.hhs"</span>],</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.3.hhs =</span> flu_HHS_full[,<span class="st">"Region.3.hhs"</span>],</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>               <span class="at">Region.4.hhs =</span> flu_HHS_full[,<span class="st">"Region.4.hhs"</span>],</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>               <span class="at">state.hhs =</span> flu_HHS_full[,<span class="st">"state.hhs"</span>],</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>               <span class="at">st_int.c =</span> flu_HHS_full[,<span class="st">"st_int"</span>],</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>               <span class="at">dsource =</span> flu_HHS_full[,<span class="st">"source"</span>]))</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a><span class="co"># HHS DataStack  </span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>hhs.stk <span class="ot">=</span> <span class="fu">inla.stack</span>(<span class="at">data =</span> <span class="fu">list</span>(<span class="at">Y =</span> <span class="fu">cbind</span>(<span class="cn">NA</span>, <span class="cn">NA</span>, flu_HHS_full<span class="sc">$</span>y_hhs)), <span class="co">#NAs for ILI and NREVESS responses, HHS in 3rd spot</span></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">A =</span> <span class="fu">list</span>(<span class="dv">1</span>,<span class="dv">1</span>),       </span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>                                <span class="at">effects =</span> hhs.lst,        </span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">tag =</span> <span class="st">"hhs"</span>)   </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="join-datastacks" class="level2">
+<h2 class="anchored" data-anchor-id="join-datastacks">Join Datastacks</h2>
+<p>Joining all three above DataStacks to a common object, joint DataStack. This is all the data needed for running the model.</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>joint_stack <span class="ot">&lt;-</span> <span class="fu">inla.stack</span>(ili.stk, nv.stk, hhs.stk)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+</section>
+<section id="next-step-run-the-model" class="level1">
+<h1>Next Step: Run the Model</h1>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+<script src="organize_files/libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

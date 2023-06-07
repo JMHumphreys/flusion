@@ -47,3 +47,13 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# data folder
+data/
+
+#adjacency matrix
+J
+
+#keys and passwords
+secrets.yaml
+/.quarto/

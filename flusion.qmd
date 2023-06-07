@@ -1,0 +1,1176 @@
+---
+title: "F(l)usion"
+categories: [R, Spatiotemporal, Misalignment, Sampling Bias, INLA]
+description: "Joint spatiotemporal modeling to address misalignment among influenza data sets"
+format:
+  html:
+    df-print: kable
+    code-fold: show
+    code-summary: "Hide code"
+    code-overflow: wrap
+    toc-title: Page Contents
+    toc: true
+    toc-depth: 2
+    number-sections: false
+    html-math-method: katex
+    css: styles.css
+    theme: flatly
+    toc-location: left
+    smooth-scroll: true
+editor_options: 
+  chunk_output_type: console
+---
+<style type="text/css">
+
+body, td {
+   font-size: 13pt;
+}
+code.r{
+  font-size: 11pt;
+}
+pre {
+  font-size: 11pt
+}
+</style>
+
+# F(l)usion overview
+
+
+# Preliminaries  
+Setup working environment and load necessary packages.
+  
+## Libraries
+```{r warning=FALSE, message=FALSE}
+#wrangling
+library(tidyverse)
+library(lubridate)
+library(data.table, include.only = "fread")
+library(cdcfluview)
+library(yaml)
+
+#spatial
+library(sp)
+library(sf)
+library(spdep)
+library(rgeos)
+library(igraph)
+library(maptools)
+library(mapproj)
+library(CovidCAR)
+#devtools::install_github("JMHumphreys/CovidCAR")
+
+#messages
+library(cli)
+
+#inference
+library(INLA)
+
+#Utilities
+source("./R/utilities.R")
+
+```
+
+# Observation Data
+## FluSurv  
+Build a flu hospitalization data file from individual state reports and all available years.  The *hospitalizations()* function from the **cdcfluview** package does most of the work by querying [FluView](https://gis.cdc.gov/GRASP/Fluview/FluHospRates.html), but seems only to be able to take small bites at a time.  
+```{r eval=TRUE}
+myRegions <- surveillance_areas() 
+
+flusurv_all <- do.call(rbind, lapply(seq_len(dim(myRegions)[1]), function(i) {
+  hospitalizations(surveillance_area = myRegions$surveillance_area[i], region = myRegions$region[i])
+}))
+```
+   
+Wrangle Flusurv data:    
+Note that the **cdcfluview** package only includes through Spring of 2020.  Because of this, the data is filtered at 2019 and a static file manually downloaded from FluView with more recnt reports (eventually this data will be moved to www.healthdata.gov).
+```{r warning=FALSE}
+range(flusurv_all$year)
+
+flusurv <- flusurv_all %>%
+  filter(age_label == "Overall",
+         region != "Entire Network",
+         year >= 2010 & year <= 2019) %>% #the pkg fails on dates after 2020,ugh
+  mutate(location_name = region,
+         network = surveillance_area,
+         weeklyrate = as.numeric(weeklyrate),
+         epiweek = year_wk_num) %>%
+    select(location_name, year, epiweek, network, rate, weeklyrate)
+  
+#manual download from site 2023-06-01
+flusurv_2020 <- fread("./data/FluSurveillance_2020.csv") %>%
+  rename_all(~gsub(" |-", "", .)) %>%
+  filter(AGECATEGORY == "Overall",
+         SEXCATEGORY == "Overall",
+         RACECATEGORY == "Overall",
+         CATCHMENT != "Entire Network",
+         MMWRYEAR >= 2020) %>% #Prior to this date was downloaded in code above
+  mutate(location_name = CATCHMENT,
+         network = NETWORK,
+         year = MMWRYEAR,
+         epiweek = MMWRWEEK,
+         rate = CUMULATIVERATE,
+         weeklyrate = as.numeric(WEEKLYRATE)) %>%
+    select(location_name, year, epiweek, network, rate, weeklyrate)
+
+#Join date ranges and scale weeklyrate
+flusurv = rbind(flusurv, flusurv_2020)
+flusurv$weeklyrate.s = as.numeric(scale(flusurv$weeklyrate, scale = T, center=T))
+
+#combine NY data
+flusurv$location_name[flusurv$location_name == "New York - Albany"] = "New York"
+flusurv$location_name[flusurv$location_name == "New York - Rochester"] ="New York"
+
+flusurv <- flusurv %>%
+  group_by(location_name, year, epiweek) %>%
+  summarise(rate = mean(rate, na.rm=T),
+            weeklyrate = mean(weeklyrate, na.rm=T),
+            weeklyrate.s = mean(weeklyrate.s, na.rm=T))
+
+
+#Check for duplicates
+unique(duplicated(flusurv))
+dim(flusurv)
+head(flusurv)
+```
+
+Same FluSurv process as above, but now for the Full Network reports
+```{r}
+flusurv_en <- flusurv_all %>%
+  filter(age_label == "Overall",
+         region == "Entire Network",
+         year >= 2010 & year <= 2019) %>% #the pkg fails on dates after 2020,ugh
+  mutate(location_name = region,
+         network = surveillance_area,
+         epiweek = year_wk_num) %>%
+    select(location_name, year, epiweek, network, rate, weeklyrate)
+  
+flusurv_en2020 <- fread("./data/FluSurveillance_2020.csv") %>%
+  rename_all(~gsub(" |-", "", .)) %>%
+  filter(AGECATEGORY == "Overall",
+         SEXCATEGORY == "Overall",
+         RACECATEGORY == "Overall",
+         CATCHMENT == "Entire Network",
+         MMWRYEAR >= 2020) %>% #the pkg fails on dates after 2020,ugh
+  mutate(location_name = CATCHMENT,
+         network = NETWORK,
+         year = MMWRYEAR,
+         epiweek = MMWRWEEK,
+         rate = CUMULATIVERATE,
+         weeklyrate = WEEKLYRATE) %>%
+    select(location_name, year, epiweek, network, rate, weeklyrate)
+
+#Join
+flusurv_en <- rbind(flusurv_en, flusurv_en2020)
+unique(duplicated(flusurv_en))
+dim(flusurv_en)
+
+head(flusurv_en)
+```
+
+
+## ILINet Surveillance Data  
+Influenza Like Illness (ILI) data using **cdcfluview** package.  Unlike FluSurv, data is available 2010-2013.    
+```{r}
+ilinet <- ilinet(region = "state") %>%
+  mutate(location_name = region,
+         epiweek = week,
+         unweighted = as.numeric(unweighted_ili),
+         unweighted.s = unweighted,
+         total = ilitotal,
+         providers = num_of_providers) %>%
+  select(location_name, year, epiweek, unweighted, unweighted.s, total, providers)
+
+# Clip to between 0.0001 and 99.999
+ilinet$unweighted.s <- pmin(pmax(as.numeric(ilinet$unweighted.s), 0.0001), 99.9999)/100
+
+# logit transform 
+ilinet$unweighted.s <- log(ilinet$unweighted.s/(1-ilinet$unweighted.s))
+range(ilinet$unweighted.s, na.rm=T)
+
+unique(duplicated(ilinet))
+dim(ilinet)
+range(ilinet$year)
+head(ilinet)
+```
+
+
+## COVID19 RPIHC by State Timeseries (raw)  
+Downloading the COVID-19 Reported Patient Impact and Hospital Capacity by State Timeseries from https://healthdata.gov/.
+```{r eval=TRUE, warning=FALSE, message=FALSE}
+url <- "https://healthdata.gov/api/views/g62h-syeh/rows.csv?accessType=DOWNLOAD"
+filename <- "./data/flu_HHS.csv"
+
+download_file(url, filename)
+```
+
+Read and wrangle RPIHC:
+```{r}
+flu_HHS <- fread("./data/flu_HHS.csv") %>%
+  mutate(abbreviation = state,
+         date = as_date(date) - 1, #1-day prior, per fluSight truth
+         year = year(date),
+         epiweek = epiweek(date)) %>%
+  group_by(abbreviation, year, epiweek) %>%
+  summarise(hosp_inc = sum(previous_day_admission_influenza_confirmed))
+
+unique(duplicated(flu_HHS))
+dim(flu_HHS)
+range(flu_HHS$year)
+head(flu_HHS)
+```
+
+
+## NREVSS
+National Respiratory and Enteric Virus Surveillance System.  
+     
+Again, unfortunately only available through a manual: https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html   
+Files illustrated here were downloaded on June 2, 2023.   
+```{r warning=FALSE, message=FALSE}
+nrevss.1 <- fread("./data/WHO_NREVSS_Combined_prior_to_2015_16.csv") %>%
+  rename_all(~gsub(" |-", "", .)) %>%
+  mutate(location_name = REGION,
+         year = YEAR,
+         epiweek = WEEK,
+         tot_perc = as.numeric(PERCENTPOSITIVE),
+         Bpos = as.numeric(B),
+         tot_samp = as.numeric(TOTALSPECIMENS),
+         Apos = tot_perc - ((Bpos/tot_samp)*100)) %>%
+  select(location_name, year, epiweek, Apos)
+
+
+nrevss.2 <- fread("./data/WHO_NREVSS_Clinical_Labs.csv") %>%
+  rename_all(~gsub(" |-", "", .)) %>%
+  mutate(location_name = REGION,
+         year = YEAR,
+         epiweek = WEEK,
+         Apos = PERCENTA) %>%
+  select(location_name, year, epiweek, Apos) #Apos = Influenza A positive
+
+# Combine 
+nrevss <- rbind(nrevss.1, nrevss.2)
+
+# Replace "X" 
+nrevss$Apos[nrevss$Apos == "X"] <- NA
+
+# Clip to between 0.0001 and 99.999
+nrevss$Apos <- pmin(pmax(as.numeric(nrevss$Apos), 0.0001), 99.9999)/100
+
+# logit transform 
+nrevss$Apos.s <- log(nrevss$Apos/(1-nrevss$Apos))
+unique(duplicated(nrevss))
+head(nrevss)
+```
+
+
+# Location Template
+
+## Location Table
+Location codes and population numbers from FluSight.  Should really get varying census over time period, but these are a start.   
+```{r warning=FALSE, message=FALSE}
+url <- "https://github.com/cdcepi/Flusight-forecast-data/raw/master/data-locations/locations.csv"
+filename <- "./data/locations.csv"
+
+download_file(url, filename)
+```
+
+Read locations:  
+```{r}
+locations <- fread("./data/locations.csv") %>%
+  select(-c(count_rate1per100k, count_rate2per100k)) %>%
+  filter(location_name != "US") #remove aggregate group
+
+head(locations)
+```
+
+
+#  Template
+Ensure all locations and times are represented in the analysis.  Missing data are plugged with NA. 
+
+## Dates and Locations  
+```{r}
+myYears <- seq(2010, 2023, by = 1)
+week_nums <- 1:52
+
+year_set <- lapply(myYears, function(year) {
+  tmp_frame <- locations %>% mutate(year = year)
+  
+  weekly_set <- lapply(week_nums, function(week_num) {
+    tmp_frame_wk <- tmp_frame %>% mutate(epiweek = week_num)
+    return(tmp_frame_wk)
+  })
+  
+  weekly_set <- do.call(rbind, weekly_set)
+  return(weekly_set)
+})
+
+template <- do.call(rbind, year_set)
+
+dim(template)
+head(template) #all states and times represented
+
+#most_recent <- max(subset(flu_HHS, year == 2023)$epiweek) #drop future dates
+most_recent <- 22 #models were initiall fit with 2023-Epiweek-22
+template$keep <- ifelse(template$year == 2023 & template$epiweek > most_recent, "drop", "keep")
+
+template <- template %>% 
+  filter(keep == "keep") %>%
+  select(-keep)
+
+unique(duplicated(template))
+```
+
+## Reduce for Testing
+Running the analysis from 2010 through 2023-Epiweek-22.
+```{r}
+template <- template %>% filter(year >= 2010)
+```
+
+
+## Time Steps  
+An index with sequential timesteps.  
+```{r}
+template <- template %>%
+  arrange(year, epiweek) %>%
+  mutate(ts_week = as.integer(as.factor(year + (epiweek/53))))
+
+
+range(template$ts_week) #number of epiweeks
+```
+
+# Spatial Domian
+Need to setup directories to use **CovidCAR** functions.  Values here are arbitrary (need to add option to bypass to CovidCAR)
+```{r warning=FALSE, message=FALSE}
+setup_analysis(report_date = "2010-01-01", 
+               training_period = 2*28, #days
+               forecast_horizon = 28, #days
+               output_dir = file.path(getwd(), "data")
+)
+```
+
+## Get Geographic Boundaries  
+```{r message=FALSE, warning=FALSE}
+States <- download_boundaries(unit = "state")
+class(States)
+
+head(States@data[,c("Region", "State")]) #appended attributes  
+```
+
+## Adjacency
+```{r warning=FALSE, message=FALSE, fig.width=8,fig.height=6}
+nb_flusion = get_neighbors(States, connect=TRUE)
+summary(nb_flusion)
+
+#view
+plot_neighbors(States, nb_flusion)
+
+#convert to matrix
+nb2INLA("J", nb_flusion)
+J = inla.read.graph("J")
+```
+
+## Template Spatial Index
+```{r}
+template$Region =  with(States@data[,c("Region", "State")],
+                       Region[match(
+                        template$location_name,
+                                 State)])
+```
+
+## Add Entire Network  
+Getting the flue weeklyrate from FluSurv.  Not that this is only the time trend from FluSurv and is not loaction specific.     
+```{r warning=FALSE, message=FALSE}
+en_match <- flusurv_en %>%
+  group_by(year, epiweek) %>%
+  summarise(en_est = mean(as.numeric(weeklyrate), na.rm=TRUE)) %>%
+  select(year, epiweek, en_est)
+
+# Clip to between 0.0001 and 99.999
+en_match$en_est.s <- pmin(pmax(as.numeric(en_match$en_est), 0.0001), 99.9999)/100
+
+# logit transform 
+en_match$en_est.s <- round(log(en_match$en_est.s/(1-en_match$en_est.s)), 3)
+range(en_match$en_est.s, na.rm=T)
+
+template <- left_join(template, en_match, by = c("year", "epiweek"))
+unique(duplicated(template))
+```
+
+## Add ST Interaction Index  
+May not be used, but including with Template just in case.  
+```{r}
+template$st_int <- as.integer(as.factor(paste0(template$Region, ".", template$ts_week)))
+range(template$st_int)
+```
+
+
+# Join to Disease Data    
+Join observation data to the template.  Times and locations without observations are coded as NA.  
+```{r}
+#FluSurv
+flusurv_full <- left_join(template, flusurv, by = c("location_name", "year", "epiweek")) 
+flusurv_full$network[is.na(flusurv_full$network)] = "none"
+unique(duplicated(flusurv_full))
+head(flusurv_full) #times and locations w/out values assigned NA
+
+#ILI Surveillance
+ilinet_full <- left_join(template, ilinet, by = c("location_name", "year", "epiweek"))
+unique(duplicated(ilinet_full))
+head(ilinet_full)
+
+#HHS 
+flu_HHS_full <- left_join(template, flu_HHS, by = c("abbreviation", "year", "epiweek"))
+unique(duplicated(flu_HHS_full))
+unique(duplicated(flu_HHS_full[,c("ts_week", "Region")]))
+head(flu_HHS_full)
+
+#nrevss 
+nrevss_full <- left_join(template, nrevss, by = c("location_name", "year", "epiweek"))
+unique(duplicated(nrevss_full))
+head(nrevss_full)
+```
+
+
+## View Coverage   
+Looking at holes in the data.  Not interested in exact values, only comparing data coverage.  
+```{r fig.width=8, fig.height=8}
+fs_plt <- flusurv_full %>% 
+  mutate(value = weeklyrate.s,
+         set = "FluSurv") %>%
+  select(location_name, ts_week, value, set)
+
+ili_plt <- ilinet_full %>% 
+  mutate(value = unweighted.s,
+          set = "ILI") %>%
+  select(location_name, ts_week, value, set)
+
+hhs_plt <- flu_HHS_full %>% 
+  mutate(value = log(hosp_inc+0.0001),
+          set = "HHS") %>%
+  select(location_name, ts_week, value, set)
+
+nrevss_plt <- nrevss_full %>% 
+  mutate(value = Apos.s,
+          set = "NREVSS") %>%
+  select(location_name, ts_week, value, set)
+
+
+all_plts <- rbind(fs_plt, ili_plt, hhs_plt, nrevss_plt)
+all_plts$set <- ordered(factor(all_plts$set), levels = c("FluSurv", "ILI", "NREVSS", "HHS"))
+
+ggplot() +
+geom_tile(data=all_plts,
+          aes(ts_week, location_name, fill = value)) +
+xlab(" ") +
+viridis::scale_fill_viridis(paste0(" "),
+                             discrete=F,
+                             option = "turbo",
+                             direction = -1,
+                             na.value = "white") +
+ylab("Location") +
+xlab("Weekly Timesteps (2010-2023)") +
+facet_wrap(~set, ncol = 4) +
+theme(panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.background = element_blank(),
+      plot.background = element_blank(),
+      panel.border = element_blank(),
+      legend.title = element_text(size = 16, face = "bold", hjust=0.5),
+      legend.text = element_text(size=10, face="bold"),
+      strip.text = element_text(size=16, face="bold"),
+      strip.background = element_blank(),
+      legend.position="none", 
+      legend.direction = "horizontal",
+      legend.box = "horizontal",
+      axis.text.y = element_text(face="bold", size=5),
+      axis.text.x = element_text(face="bold", size=12, vjust=0.5,
+                                 hjust=1, angle=90),
+      axis.title.x = element_text(size=12, face="bold"),
+      axis.title.y = element_text(size=18, face="bold"),
+      plot.title = element_text(size=18, face="bold", hjust=0.5)) +
+guides(color = guide_legend(title.position = "top", label.position = "bottom"))
+```
+
+
+
+
+
+# Organize Data
+
+## ILI Set
+```{r} 
+ilinet_full <- as.data.frame(ilinet_full) %>%
+  mutate(y_ili = unweighted.s, 
+         l.pop.ili = log(population),
+         Region.1.ili = Region,
+         Region.2.ili = Region,
+         Region.3.ili = Region,
+         Region.4.ili = Region,
+         ts_week.1.ili = ts_week,
+         ts_week.2.ili = ts_week,
+         ts_week.3.ili = ts_week,
+         ts_week.4.ili = ts_week,
+         state.ili = abbreviation,
+         year.ili = as.integer(as.factor(year)),
+         year.ili.1 = as.integer(as.factor(year)),
+         year.ili.2 = as.integer(as.factor(year)),
+         year.ili.3 = as.integer(as.factor(year)),
+         source = 1)
+
+
+
+ili.lst = list(list(intercept1 = rep(1, dim(ilinet_full)[1])), 
+          list(l.pop.ili = ilinet_full[,"l.pop.ili"],                
+               year.ili = ilinet_full[,"year.ili"],
+               en_est.s = ilinet_full[,"en_est.s"],
+               year.ili.1 = ilinet_full[,"year.ili.1"],
+               year.ili.2 = ilinet_full[,"year.ili.2"],
+               year.ili.3 = ilinet_full[,"year.ili.3"],
+               ts_week = ilinet_full[,"ts_week.1.ili"],
+               ts_week.iid = ilinet_full[,"ts_week.1.ili"],
+               ts_week.1.ili = ilinet_full[,"ts_week.1.ili"],
+               ts_week.2.ili = ilinet_full[,"ts_week.2.ili"],
+               ts_week.3.ili = ilinet_full[,"ts_week.3.ili"],
+               Region = ilinet_full[,"Region.1.ili"],
+               Region.1 = ilinet_full[,"Region.1.ili"],
+               Region.2 = ilinet_full[,"Region.1.ili"],
+               Region.cross = ilinet_full[,"Region.1.ili"],
+               Region.1.ili = ilinet_full[,"Region.1.ili"],
+               Region.2.ili = ilinet_full[,"Region.2.ili"],
+               Region.3.ili = ilinet_full[,"Region.3.ili"],
+               Region.4.ili = ilinet_full[,"Region.4.ili"],
+               st_int.ili = ilinet_full[,"st_int"],
+               state.ili = ilinet_full[,"state.ili"],
+               dsource = ilinet_full[,"source"]))
+
+ili.stk = inla.stack(data = list(Y = cbind(ilinet_full$y_ili, NA, NA)), 
+                                      A = list(1,1),       
+                                effects = ili.lst,        
+                                    tag = "ili")   
+
+
+
+
+```
+
+## NREVSS Set
+```{r} 
+nrevss_full <- as.data.frame(nrevss_full) %>%
+  mutate(y_nrvs = Apos.s,
+         l.pop.nv = log(population),
+         Region.1.nv = Region,
+         Region.2.nv = Region,
+         Region.3.nv = Region,
+         Region.4.nv = Region,
+         ts_week.1.nv = ts_week,
+         ts_week.2.nv = ts_week,
+         ts_week.3.nv = ts_week,
+         ts_week.4.nv = ts_week,
+         state.nv = abbreviation,
+         year.nv = as.integer(as.factor(year)),
+         year.nv.1 = as.integer(as.factor(year)),
+         year.nv.2 = as.integer(as.factor(year)),
+         year.nv.3 = as.integer(as.factor(year)),
+         source = 2)
+
+
+
+nv.lst = list(list(intercept2 = rep(1, dim(nrevss_full)[1])), 
+          list(l.pop.nv = nrevss_full[,"l.pop.nv"], 
+               en_est.s = nrevss_full[,"en_est.s"],
+               year.nv = nrevss_full[,"year.nv"],
+               year.nv.1 = nrevss_full[,"year.nv.1"],
+               year.nv.2 = nrevss_full[,"year.nv.2"],
+               year.nv.3 = nrevss_full[,"year.nv.3"],
+               ts_week = nrevss_full[,"ts_week.1.nv"],
+               ts_week.iid = nrevss_full[,"ts_week.1.nv"],
+               ts_week.1.nv = nrevss_full[,"ts_week.1.nv"],
+               ts_week.2.nv = nrevss_full[,"ts_week.2.nv"],
+               ts_week.3.nv = nrevss_full[,"ts_week.3.nv"],
+               Region = nrevss_full[,"Region.1.nv"],
+               Region.1 = nrevss_full[,"Region.1.nv"],
+               Region.2 = nrevss_full[,"Region.1.nv"],
+               Region.cross = nrevss_full[,"Region.1.nv"],
+               Region.1.nv = nrevss_full[,"Region.1.nv"],
+               Region.2.nv = nrevss_full[,"Region.2.nv"],
+               Region.3.nv = nrevss_full[,"Region.3.nv"],
+               Region.4.nv = nrevss_full[,"Region.4.nv"],
+               st_int = nrevss_full[,"st_int"],
+               state.nv = nrevss_full[,"state.nv"],
+               dsource = nrevss_full[,"source"]))
+
+
+nv.stk = inla.stack(data = list(Y = cbind(NA, nrevss_full$y_nrvs,NA)), 
+                                      A = list(1,1),       
+                                effects = nv.lst,        
+                                    tag = "nrvs")   
+
+
+
+
+```
+
+## HHS Set
+```{r} 
+flu_HHS_full <- as.data.frame(flu_HHS_full) %>%
+  mutate(y_hhs = log(hosp_inc+0.0001), #NAs
+         l.pop.hhs = log(population),
+         Region.1.hhs = Region,
+         Region.2.hhs = Region,
+         Region.3.hhs = Region,
+         Region.4.hhs = Region,
+         ts_week.1.hhs = ts_week,
+         ts_week.2.hhs = ts_week,
+         ts_week.3.hhs = ts_week,
+         ts_week.4.hhs = ts_week,
+         state.hhs = abbreviation,
+         year.hhs = as.integer(as.factor(year)),
+         year.hhs.1 = as.integer(as.factor(year)),
+         year.hhs.2 = as.integer(as.factor(year)),
+         year.hhs.3 = as.integer(as.factor(year)),
+         source = 3)
+
+
+
+hhs.lst = list(list(intercept3 = rep(1, dim(flu_HHS_full)[1])), 
+          list(l.pop.hhs = flu_HHS_full[,"l.pop.hhs"], 
+               en_est.s = flu_HHS_full[,"en_est.s"],
+               year.hhs = flu_HHS_full[,"year.hhs"],
+               year.hhs.1 = flu_HHS_full[,"year.hhs"],
+               year.hhs.2 = flu_HHS_full[,"year.hhs"],
+               year.hhs.3 = flu_HHS_full[,"year.hhs"],
+               ts_week.c = flu_HHS_full[,"ts_week.1.hhs"],
+               ts_week.iid.c = flu_HHS_full[,"ts_week.1.hhs"],
+               ts_week.1.hhs = flu_HHS_full[,"ts_week.1.hhs"],
+               ts_week.2.hhs = flu_HHS_full[,"ts_week.2.hhs"],
+               ts_week.3.hhs = flu_HHS_full[,"ts_week.3.hhs"],
+               Region = flu_HHS_full[,"Region.1.hhs"],
+               Region.c = flu_HHS_full[,"Region.1.hhs"],
+               Region.1.c = flu_HHS_full[,"Region.1.hhs"],
+               Region.2.c = flu_HHS_full[,"Region.1.hhs"],
+               Region.1.hhs = flu_HHS_full[,"Region.1.hhs"],
+               Region.2.hhs = flu_HHS_full[,"Region.2.hhs"],
+               Region.3.hhs = flu_HHS_full[,"Region.3.hhs"],
+               Region.4.hhs = flu_HHS_full[,"Region.4.hhs"],
+               state.hhs = flu_HHS_full[,"state.hhs"],
+               st_int.c = flu_HHS_full[,"st_int"],
+               dsource = flu_HHS_full[,"source"]))
+
+hhs.stk = inla.stack(data = list(Y = cbind(NA, NA, flu_HHS_full$y_hhs)), 
+                                      A = list(1,1),       
+                                effects = hhs.lst,        
+                                    tag = "hhs")   
+
+
+
+
+```
+
+
+## Join Datastacks
+```{r}
+joint_stack <- inla.stack(ili.stk, nv.stk, hhs.stk)
+
+
+
+```
+
+
+
+
+```{r}
+norm.prior = list(theta=list(prior = "normal", param=c(0, 3)))
+pcprior1 = list(prec = list(prior="pc.prec", param = c(1, 0.001)))
+
+#bym prior
+bym_hyper <- list(phi = list(prior = "pc", 
+                      param = c(0.5, 2/3), 
+                      initial = 3), 
+               prec = list(prior = "pc.prec", 
+                       param = c(1, 0.01), 
+                       initial = 1.5))  
+
+bym_hyper <- list(phi = list(prior = "pc", 
+                      param = c(0.5, 0.5)), 
+               prec = list(prior = "pc.prec", 
+                       param = c(1, 0.01)))  
+
+norm.prior <- list(theta=list(prior = "normal", 
+                              param=c(0, 1)))
+
+
+#iid prior
+pc_prec_iid <- list(theta = list(prior="pc.prec", 
+                                 param=c(0.5, 0.01)))
+
+#ar1 prior
+pc_cor_ar1 <- list(theta = list(prior = 'pccor1', 
+                                param = c(0.5, 0.5)))
+
+#rw2 prior
+pc_rw <- list(prec=list(prior="pc.prec", 
+                         param=c(0.5,0.01)))
+
+  
+  
+
+Frm.1 = Y ~ -1 + intercept1 +
+                   intercept2 +
+                   intercept3 +
+                   l.pop.ili + 
+                   l.pop.nv +
+                   l.pop.hhs + 
+                      f(Region.1.ili, 
+                         model="bym2",
+                         graph=J,
+                         constr=TRUE,
+                         group = year.ili, #ts_week.1.ili,
+                         control.group=list(model="ar1"),
+                         hyper=bym_hyper) + 
+                      f(Region.1.nv, 
+                         model="bym2",
+                         graph=J,
+                         constr=TRUE,
+                         group = year.nv.1, #ts_week.1.fs,
+                         control.group=list(model="ar1"),
+                         hyper=bym_hyper) + 
+                      f(Region.2.nv, 
+                        copy="Region.1.ili",
+                        group = year.nv.2,
+                        fixed=FALSE) +
+                      f(Region.1.hhs, 
+                         model="bym2",
+                         graph=J,
+                         constr=TRUE, 
+                         group = year.hhs.1,
+                         control.group=list(model="ar1"),
+                         hyper=bym_hyper) + 
+                      f(Region.2.hhs, 
+                        copy="Region.1.ili",
+                        group = year.hhs.2,
+                        fixed=FALSE) +
+                      f(Region.3.hhs, 
+                        copy="Region.1.nv",
+                        group = year.hhs.3,
+                        fixed=FALSE) + 
+                      f(ts_week.1.nv,           
+                        constr=TRUE,
+                        scale.model = TRUE,
+                        model="seasonal",
+                        season.length = 52,
+                        #group = Region.1,
+                        #control.group=list(model="iid"),
+                        hyper=pcprior1) +
+                      f(ts_week.2.nv,           
+                        constr=TRUE,
+                        model="iid",
+                        #group = Region.2,
+                        #control.group=list(model="iid"),
+                        hyper=pc_prec_iid) +
+                      f(ts_week.c,
+                        copy = "ts_week.1.nv",
+                        #group = Region.c,
+                        fixed=FALSE) +
+                      f(ts_week.iid.c,
+                        copy = "ts_week.2.nv",
+                        #group = Region.1.c,
+                        fixed=FALSE) +
+                      f(en_est.s,           
+                        constr=TRUE,
+                        scale.model = TRUE,
+                        model="rw1",
+                        group = Region, #mod 6 region level
+                        control.group=list(model="iid"),
+                        hyper=pc_rw)
+                      #f(st_int.ili,           
+                       # constr=TRUE,
+                       # model="iid",
+                       # hyper=pc_prec_iid) +
+                      #f(st_int,           
+                      #  constr=TRUE,
+                      #  model="iid",
+                     #   hyper=pc_prec_iid) +
+                     # f(st_int.c,
+                      #  copy = "st_int",
+                      #  fixed=FALSE)
+                      
+
+
+#theta1 = Joint.mod$internal.summary.hyperpar$mean
+theta1 = c(1.1687598, -2.5619882, -2.0995416,  1.0536285,  2.4831950,  1.5739761, -2.7292169,  1.6055626,  0.4502841,
+           -2.4780584,  1.2013549,  0.9205245, -3.6258143, 3.3792579, 1, -0.9195502,  1.1574559,  0.8399526,  1.7517271, 1)
+
+theta1 = c(0.2827609, -2.5003914, -2.0046379,  0.3594409, -1.8462355,  2.5576085, -1.8574633, -3.4061547,
+           0.7096711, -2.1582480, -1.8371704,  2.0105859,  3.9303980,  0.4148036,  4.6119451,  0.5583314,
+           0.8325189,  0.3338806,  2.5360033,  1.8633417) #initial2
+
+theta3 = c(-0.3452001,-1.9150175, -1.9546495,  0.4495805, -1.0949324,  2.1278772, -1.2478600,  0.2691233,
+           1.9514395, -1.9601578, -1.7104843,  2.1596213,  5.0147703, -2.3457922, -1.1353709,  0.2397915,
+           0.8596621,  0.2750877,  0.6400272,  0.4542413)
+
+theta5 = c(-0.56686743, -2.10828061, -1.95713241,  0.06579743, -0.09814683,  2.61967616, -1.27387472,  0.19664533,  1.81029996,
+           -1.92052717, -0.69497717,  2.20580332,  5.19657440, -2.17964335, -2.24216194, -0.12524395,  0.60062266,  0.20796619,
+           0.63707468,  0.49558648)
+
+Joint.mod = inla(Frm.1, 
+      				 #num.threads = 8,
+      				 data = inla.stack.data(joint_stack), 
+      				 family = c("gaussian", "gaussian","gaussian"), 
+      				 verbose = TRUE,
+      				 #E = inla.stack.data(joint_stack)$e,
+      				 #offset = inla.stack.data(joint_stack)$e,
+      				 control.fixed = list(prec = 1, 
+      									  prec.intercept = 1), 
+      				 control.predictor = list(
+      											 A = inla.stack.A(joint_stack), 
+      									 compute = TRUE, 
+      										  link = 1), 
+      				 control.mode = list(restart = TRUE, theta = theta3),
+      				 control.inla = list(strategy="gaussian", 
+      											   int.strategy = "eb"),
+      				 control.compute=list(dic = F, cpo = F, waic = F))
+
+#save(list=c("Joint.mod", "J", "joint_stack"), file="./runs/initial6.RData", version = 2)
+
+```
+
+#Load Run
+```{r}
+load("~/flusion/runs/initial5.RData")
+
+```
+
+
+# Get Results
+## Ilinet
+```{r}
+#ili_scale_obj = scale(ilinet$unweighted, scale=T, center=T) #scaled object
+#obs_scale_ili = function(r)r*attr(ili_scale_obj,'scaled:scale') + attr(ili_scale_obj, 'scaled:center')
+
+
+idat <- inla.stack.index(joint_stack, "ili")$data
+getValues <- Joint.mod$summary.fitted.values[idat, c(1:5)]
+names(getValues) <- c("mean", "sd", "q0.025", "q0.5", "q0.975")
+getValues <- data.frame(lapply(getValues, plogis))
+getValues[getValues < 0] <- 0
+cor(ilinet_full$unweighted, getValues$q0.5, use="pairwise.complete")
+
+ilinet_full_fit <- cbind(ilinet_full, getValues)
+
+
+
+
+
+```
+
+## NREVSS
+```{r}
+idat <- inla.stack.index(joint_stack, "nrvs")$data
+getValues <- Joint.mod$summary.fitted.values[idat, c(3:5)]
+names(getValues) <- c("q0.025", "q0.5", "q0.975")
+getValues <- data.frame(lapply(getValues, plogis))
+
+cor(nrevss_full$Apos, getValues$q0.5, use="pairwise.complete")
+
+nrevss_full.fit <- cbind(nrevss_full, getValues)
+
+
+
+
+
+```
+
+
+## HHS
+```{r}
+idat <- inla.stack.index(joint_stack, "hhs")$data
+getValues <- Joint.mod$summary.fitted.values[idat, c(3:5)]
+names(getValues) <- c("q0.025", "q0.5", "q0.975")
+getValues <- data.frame(lapply(getValues, exp))
+
+cor(flu_HHS_full$hosp_inc, getValues$q0.5, use="pairwise.complete")
+
+flu_HHS_full.fit <- cbind(flu_HHS_full, getValues)
+
+```
+
+## Check Coverage Agian
+```{r fig.width=8, fig.height=7}
+ili_plt2 <- ilinet_full_fit %>% 
+  mutate(value = q0.5,
+          set = "est.ILI") %>%
+  select(location_name, ts_week, value, set)
+
+hhs_plt2 <- flu_HHS_full.fit %>% 
+  mutate(value = q0.5,
+          set = "est.HHS") %>%
+  select(location_name, ts_week, value, set)
+
+nrevss_plt2 <- nrevss_full.fit %>% 
+  mutate(value = q0.5,
+          set = "est.NREVSS") %>%
+  select(location_name, ts_week, value, set)
+
+
+all_plts2 <- rbind(ili_plt2, hhs_plt2, nrevss_plt2)
+all_plts1 <- all_plts %>% filter(set != "FluSurv")
+
+new_plt = rbind(all_plts1, all_plts2)
+
+unique(new_plt$set)
+new_plt$set <- ordered(factor(new_plt$set), c("ILI", "NREVSS", "HHS", "est.ILI", "est.NREVSS", "est.HHS"))
+
+
+ggplot() +
+geom_tile(data=new_plt,
+          aes(ts_week, location_name, fill = value)) +
+xlab(" ") +
+viridis::scale_fill_viridis(paste0(" "),
+                             discrete=F,
+                             option = "turbo",
+                             direction = -1,
+                             na.value = "white") +
+ylab("Location") +
+xlab("Weekly Timesteps (2016-2023)") +
+facet_wrap(~set, ncol = 3) +
+theme(panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.background = element_blank(),
+      plot.background = element_blank(),
+      panel.border = element_blank(),
+      legend.title = element_text(size = 16, face = "bold", hjust=0.5),
+      legend.text = element_text(size=10, face="bold"),
+      strip.text = element_text(size=16, face="bold"),
+      strip.background = element_blank(),
+      legend.position="none", #c(0.7, 0.7),
+      legend.direction = "horizontal",
+      legend.box = "horizontal",
+      #legend.key.size = unit(0,"line"),
+      #legend.key.width = unit(2,"line"),
+      axis.text.y = element_text(face="bold", size=5),
+      axis.text.x = element_text(face="bold", size=12, vjust=0.5,
+                                 hjust=1, angle=90),
+      axis.title.x = element_text(size=12, face="bold"),
+      axis.title.y = element_text(size=18, face="bold"),
+      plot.title = element_text(size=18, face="bold", hjust=0.5)) +
+guides(color = guide_legend(title.position = "top", label.position = "bottom"))
+
+
+
+
+```
+
+# Time Series
+```{r}
+rw1_set <- Joint.mod$summary.random$en_est.s[,1:6]
+names(rw1_set) <- c("ID", "Mean", "SD", "q0.025", "q0.5", "q0.975")
+
+est_intervals <- estimate_CI(rw1_set[,c("q0.025", "q0.5", "q0.975")])
+rw1_set <- cbind(rw1_set, est_intervals)
+
+ggplot(rw1_set, aes(ID, q0.5)) +
+  geom_ribbon(aes(ymin=q0.025, ymax=q0.975),fill="steelblue", alpha = 0.3) +
+  geom_ribbon(aes(ymin=q0.25, ymax=q0.75), fill="steelblue", alpha = 0.5) +
+  geom_line(method="loess",
+              se=FALSE,
+              span=0.7,
+              col="black") 
+  
+
+plot(rw1_set$ID, rw1_set$mean)
+plot(flu_HHS_full.fit$ts_week, flu_HHS_full.fit$en_est)
+
+rw1_set <- Joint.mod$summary.random$ts_week.1.nv
+plot(rw1_set$ID, rw1_set$mean)
+plot(flu_HHS_full.fit$ts_week, flu_HHS_full.fit$en_est)
+
+
+#HHS weeks
+week_agg <- flu_HHS_full.fit %>%
+  group_by(ts_week) %>%
+  summarise(pTotal = sum(q0.5),
+            obsTotal = sum(hosp_inc))
+
+max(week_agg$pTotal, na.rm=T)
+
+plot(week_agg$ts_week, week_agg$pTotal)
+
+
+ggplot() +
+  geom_line(data = week_agg,
+            aes(ts_week, pTotal), col="black") +
+  geom_line(data = week_agg,
+            aes(ts_week, obsTotal), col="red")
+
+#ILI weeks
+week_agg <- ilinet_full_fit %>%
+  group_by(ts_week) %>%
+  summarise(pTotal = sum(q0.5),
+            obsTotal = sum(unweighted, na.rm=T))
+
+max(ilinet_full_fit$unweighted, na.rm=T)
+max(ilinet_full_fit$q0.5)
+max(ilinet_full_fit$mean)
+max(week_agg$obsTotal, na.rm=T)
+
+ggplot() +
+  geom_line(data = week_agg,
+            aes(ts_week, pTotal), col="black") +
+  geom_line(data = week_agg,
+            aes(ts_week, obsTotal/100), col="red")
+
+
+#NRVESS weeks
+week_agg2 <- nrevss_full.fit %>%
+  group_by(ts_week) %>%
+  summarise(pTotal = mean((q0.5)),
+            obsTotal = mean(Apos, na.rm=T))
+
+ggplot() +
+  geom_line(data = week_agg2,
+            aes(ts_week, pTotal), col="black") +
+  geom_line(data = week_agg2,
+            aes(ts_week, obsTotal), col="red") +
+  geom_line(data = week_agg,
+            aes(ts_week, pTotal/155555.6), col="green") +
+  geom_line(data = week_agg,
+            aes(ts_week, obsTotal/155555.6), col="blue")
+```
+
+
+
+# Scaling
+```{r}
+
+nrv.set <- nrevss_full.fit %>% 
+  mutate(p.nrv = q0.5,
+         p.nrv.l = q0.025,
+         p.nrv.h = q0.975) %>%
+  select(ts_week, Region, Apos, p.nrv, p.nrv.l, p.nrv.h)
+
+hhs.set <- flu_HHS_full.fit %>% 
+  mutate(p.hhs = q0.5,
+         p.hhs.l = q0.025,
+         p.hhs.h = q0.975) %>%
+  select(ts_week, Region, hosp_inc, p.hhs, p.hhs.l, p.hhs.h)
+
+comb.set <- left_join(nrv.set, hhs.set, by = c("ts_week", "Region"))
+
+scale_match <- find_overlap(dataframe = comb.set, target="Apos", obs="hosp_inc", amp = "p.nrv")
+
+
+flu_HHS_full.fit = left_join(flu_HHS_full.fit, scale_match, by = c("ts_week", "Region"))
+flu_HHS_full.fit$flusion <- (flu_HHS_full.fit$s.q50*0.60) + (flu_HHS_full.fit$q0.5*0.40)
+
+range(flu_HHS_full.fit$flusion)
+range(flu_HHS_full.fit$s.q50)
+
+
+```
+
+# Compare plots
+```{r}
+
+nrv.set <- nrevss_full.fit %>% 
+  group_by(ts_week) %>%
+  summarise(rpt = mean(Apos, na.rm=T),
+            q0.5 = mean(q0.5)) %>%
+  mutate(set = "NRVESS")
+
+hhs.set <- flu_HHS_full.fit %>%  
+ group_by(ts_week) %>%
+  summarise(rpt = sum(hosp_inc, na.rm=T),
+            q0.5 = sum(flusion)) %>%
+  mutate(set = "HHS")
+
+
+ili.set <- ilinet_full_fit %>% 
+ group_by(ts_week) %>%
+  summarise(rpt = mean(unweighted, na.rm=T),
+            q0.5 = mean(q0.5)*100) %>%
+  mutate(set = "ILI")
+
+
+seas_set <- Joint.mod$summary.random$ts_week.1.nv[, c(1,5)]
+names(seas_set) <- c("ts_week", "q0.5")
+seas_set$set <- "Seasonality"
+seas_set$rpt = seas_set$q0.5
+
+
+plot_trends <- rbind(nrv.set, hhs.set, ili.set, seas_set)
+
+
+
+
+
+
+#est_intervals <- estimate_CI(plot_trends[,c("q0.025", "q0.5", "q0.975")])
+#plot_trends <- cbind(plot_trends, est_intervals)
+
+
+
+
+```
+
+```{r}
+
+plot_short <- plot_trends %>% select(ts_week, rpt, set, q0.5)
+plot_short <- reshape2::melt(plot_short, c("ts_week", "set"))
+plot_short$var2 = paste(plot_short$set, plot_short$variable, sep = ".")
+plot_short <- plot_short %>% filter(var2 != "Seasonality.rpt")
+
+plot_short$var3 <- ifelse(plot_short$var2 == "HHS.q0.5" | plot_short$var2 == "Seasonality.q0.5", "F(l)usion", plot_short$var2)
+
+
+plot_short$Source <- ifelse(plot_short$variable == "rpt", "Reported", 
+                       ifelse(plot_short$var3 == "F(l)usion", "F(l)usion", "Estimated"))
+plot_short$set <- ifelse(plot_short$var2 == "HHS.q0.5", "F(l)usion",
+                      ifelse(plot_short$var2 == "Seasonality.q0.5", "F(l)usion Seasonality",   plot_short$set))
+
+plot_short$set <- ordered(factor(plot_short$set), levels = c("F(l)usion", "F(l)usion Seasonality", "HHS", "NRVESS", "ILI"))
+
+ggplot(plot_short, aes(ts_week, value, group = var2, col = Source)) +  
+  geom_line(linewidth = 0.5) +
+  facet_wrap(~set, ncol=1, scale="free") +
+  ylab("Reported/Estimated Values") +
+  xlab("EpiWeeks (2010 - 2023)") +
+  scale_color_manual(values=c("green", "darkred", "black")) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_line(color = "gray90",
+                                        linewidth = 0.25,
+                                        linetype = 1),
+         panel.grid.major = element_line(color = "gray60",
+                                        linewidth = 0.5,
+                                        linetype = 1),
+              panel.background = element_blank(),
+              plot.background = element_blank(),
+         #     panel.border = element_blank(),
+              #legend.direction = "horizontal",
+              legend.position="bottom",
+              strip.text = element_text(size=16, face="bold"),
+              strip.background = element_blank(),
+              legend.key.size = unit(1,"line"),
+              legend.key.width = unit(3,"line"),
+              legend.text = element_text(size=12, face="bold"),
+              legend.title = element_text(size=16, face="bold"),
+              axis.title.x =  element_text(size=16, face="bold"),
+              axis.title.y = element_text(size=16, face="bold"),
+              axis.text.x =  element_text(size=14, face="bold"),
+              axis.text.y = element_text(size=12, face="bold"),
+              #axis.ticks.x = element_blank(),
+              #axis.ticks.y =element_blank(),
+              plot.title = element_text(size=22, face="bold"))
+
+
+
+
+
+
+
+
+
+
+
+
+```
+
+
