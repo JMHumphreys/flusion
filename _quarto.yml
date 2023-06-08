@@ -12,6 +12,7 @@ website:
   sidebar:
     style: "floating"
     logo: images/flusion.png
+    align: center
     search: true
     tools:
       - icon: github

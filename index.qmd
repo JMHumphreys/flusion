@@ -1,7 +1,7 @@
 ---
 image: images/flusion.png
-#about:
-#  template: trestles
+about:
+  template: marquee
 format:
   html:
     code-fold: show
