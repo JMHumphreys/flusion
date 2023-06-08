@@ -129,6 +129,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 <link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="Preprocessing">
+<meta property="og:description" content="Import and wrangle mutlisourced influenza observations">
 </head>
 
 <body class="nav-sidebar floating">
@@ -156,12 +158,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <a href="" title="" id="sidebar-tool-dropdown-0" class="sidebar-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-github"></i></a>
     <ul class="dropdown-menu" aria-labelledby="sidebar-tool-dropdown-0">
         <li>
-          <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/JMHumphreys/flusion_model">
+          <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/JMHumphreys/flusion">
           Source Code
           </a>
         </li>
         <li>
-          <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/JMHumphreys/flusion_model/issues">
+          <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/JMHumphreys/flusion/issues">
           Report a Bug
           </a>
         </li>
@@ -186,7 +188,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../index.html" class="sidebar-item-text sidebar-link">Flusions greetings</a>
+  <a href="../../index.html" class="sidebar-item-text sidebar-link">Welcome to f(l)usion</a>
   </div>
 </li>
       </ul>
@@ -254,7 +256,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <ul class="collapse">
   <li><a href="#flusurv" id="toc-flusurv" class="nav-link" data-scroll-target="#flusurv">FluSurv</a></li>
   <li><a href="#ilinet-surveillance-data" id="toc-ilinet-surveillance-data" class="nav-link" data-scroll-target="#ilinet-surveillance-data">ILINet Surveillance Data</a></li>
-  <li><a href="#covid19-rpihc-by-state-timeseries-raw" id="toc-covid19-rpihc-by-state-timeseries-raw" class="nav-link" data-scroll-target="#covid19-rpihc-by-state-timeseries-raw">COVID19 RPIHC by State Timeseries (raw)</a></li>
+  <li><a href="#covid19-rpihc" id="toc-covid19-rpihc" class="nav-link" data-scroll-target="#covid19-rpihc">COVID19 RPIHC</a></li>
   <li><a href="#nrevss" id="toc-nrevss" class="nav-link" data-scroll-target="#nrevss">NREVSS</a></li>
   </ul></li>
   <li><a href="#location-template" id="toc-location-template" class="nav-link" data-scroll-target="#location-template">Location Template</a>
@@ -402,7 +404,7 @@ Note that the <strong>cdcfluview</strong> package only includes through Spring o
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(location_name, year, epiweek, network, rate, weeklyrate)</span>
 <span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co">#manual download from site 2023-06-01</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>flusurv_2020 <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">"D:/Github/flusion_model/data/FluSurveillance_2020.csv"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>flusurv_2020 <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">"D:/Github/flusion/data/FluSurveillance_2020.csv"</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename_all</span>(<span class="sc">~</span><span class="fu">gsub</span>(<span class="st">" |-"</span>, <span class="st">""</span>, .)) <span class="sc">%&gt;%</span></span>
 <span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(AGECATEGORY <span class="sc">==</span> <span class="st">"Overall"</span>,</span>
 <span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>         SEXCATEGORY <span class="sc">==</span> <span class="st">"Overall"</span>,</span>
@@ -529,7 +531,7 @@ Note that the <strong>cdcfluview</strong> package only includes through Spring o
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">epiweek =</span> year_wk_num) <span class="sc">%&gt;%</span></span>
 <span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(location_name, year, epiweek, network, rate, weeklyrate)</span>
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>flusurv_en2020 <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">"D:/Github/flusion_model/data/FluSurveillance_2020.csv"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>flusurv_en2020 <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">"D:/Github/flusion/data/FluSurveillance_2020.csv"</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename_all</span>(<span class="sc">~</span><span class="fu">gsub</span>(<span class="st">" |-"</span>, <span class="st">""</span>, .)) <span class="sc">%&gt;%</span></span>
 <span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(AGECATEGORY <span class="sc">==</span> <span class="st">"Overall"</span>,</span>
 <span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>         SEXCATEGORY <span class="sc">==</span> <span class="st">"Overall"</span>,</span>
@@ -764,14 +766,14 @@ Note that the <strong>cdcfluview</strong> package only includes through Spring o
 </div>
 </div>
 </section>
-<section id="covid19-rpihc-by-state-timeseries-raw" class="level2">
-<h2 class="anchored" data-anchor-id="covid19-rpihc-by-state-timeseries-raw">COVID19 RPIHC by State Timeseries (raw)</h2>
+<section id="covid19-rpihc" class="level2">
+<h2 class="anchored" data-anchor-id="covid19-rpihc">COVID19 RPIHC</h2>
 <p>Downloading the COVID-19 Reported Patient Impact and Hospital Capacity by State Timeseries from https://healthdata.gov/.</p>
 <div class="cell">
 <details open="">
 <summary>Hide code</summary>
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>url <span class="ot">&lt;-</span> <span class="st">"https://healthdata.gov/api/views/g62h-syeh/rows.csv?accessType=DOWNLOAD"</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>filename <span class="ot">&lt;-</span> <span class="st">"D:/Github/flusion_model/data/flu_HHS.csv"</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>filename <span class="ot">&lt;-</span> <span class="st">"D:/Github/flusion/data/flu_HHS.csv"</span></span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="fu">download_file</span>(url, filename)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
@@ -780,7 +782,7 @@ Note that the <strong>cdcfluview</strong> package only includes through Spring o
 <div class="cell">
 <details open="">
 <summary>Hide code</summary>
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>flu_HHS <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">"D:/Github/flusion_model/data/flu_HHS.csv"</span>) <span class="sc">%&gt;%</span></span>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>flu_HHS <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">"D:/Github/flusion/data/flu_HHS.csv"</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">abbreviation =</span> state,</span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">date =</span> <span class="fu">as_date</span>(date) <span class="sc">-</span> <span class="dv">1</span>, <span class="co">#1-day prior, per fluSight truth</span></span>
 <span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">year =</span> <span class="fu">year</span>(date),</span>
@@ -873,7 +875,7 @@ Files illustrated here were downloaded on June 2, 2023.</p>
 <div class="cell">
 <details open="">
 <summary>Hide code</summary>
-<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>nrevss<span class="fl">.1</span> <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">"D:/Github/flusion_model/data/WHO_NREVSS_Combined_prior_to_2015_16.csv"</span>) <span class="sc">%&gt;%</span></span>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>nrevss<span class="fl">.1</span> <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">"D:/Github/flusion/data/WHO_NREVSS_Combined_prior_to_2015_16.csv"</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename_all</span>(<span class="sc">~</span><span class="fu">gsub</span>(<span class="st">" |-"</span>, <span class="st">""</span>, .)) <span class="sc">%&gt;%</span></span>
 <span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">location_name =</span> REGION,</span>
 <span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">year =</span> YEAR,</span>
@@ -885,7 +887,7 @@ Files illustrated here were downloaded on June 2, 2023.</p>
 <span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(location_name, year, epiweek, Apos)</span>
 <span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>nrevss<span class="fl">.2</span> <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">"D:/Github/flusion_model/data/WHO_NREVSS_Clinical_Labs.csv"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>nrevss<span class="fl">.2</span> <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">"D:/Github/flusion/data/WHO_NREVSS_Clinical_Labs.csv"</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename_all</span>(<span class="sc">~</span><span class="fu">gsub</span>(<span class="st">" |-"</span>, <span class="st">""</span>, .)) <span class="sc">%&gt;%</span></span>
 <span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">location_name =</span> REGION,</span>
 <span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>         <span class="at">year =</span> YEAR,</span>
@@ -984,7 +986,7 @@ Files illustrated here were downloaded on June 2, 2023.</p>
 <details open="">
 <summary>Hide code</summary>
 <div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>url <span class="ot">&lt;-</span> <span class="st">"https://github.com/cdcepi/Flusight-forecast-data/raw/master/data-locations/locations.csv"</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>filename <span class="ot">&lt;-</span> <span class="st">"D:/Github/flusion_model/data/locations.csv"</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>filename <span class="ot">&lt;-</span> <span class="st">"D:/Github/flusion/data/locations.csv"</span></span>
 <span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="fu">download_file</span>(url, filename)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
@@ -993,7 +995,7 @@ Files illustrated here were downloaded on June 2, 2023.</p>
 <div class="cell">
 <details open="">
 <summary>Hide code</summary>
-<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>locations <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">"D:/Github/flusion_model/data/locations.csv"</span>) <span class="sc">%&gt;%</span></span>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>locations <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">"D:/Github/flusion/data/locations.csv"</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(count_rate1per100k, count_rate2per100k)) <span class="sc">%&gt;%</span></span>
 <span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(location_name <span class="sc">!=</span> <span class="st">"US"</span>) <span class="co">#remove aggregate group</span></span>
 <span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a></span>
@@ -1209,7 +1211,7 @@ Files illustrated here were downloaded on June 2, 2023.</p>
 <div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">setup_analysis</span>(<span class="at">report_date =</span> <span class="st">"2010-01-01"</span>, </span>
 <span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">training_period =</span> <span class="dv">2</span><span class="sc">*</span><span class="dv">28</span>, <span class="co">#days</span></span>
 <span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">forecast_horizon =</span> <span class="dv">28</span>, <span class="co">#days</span></span>
-<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">output_dir =</span> <span class="st">"D:/Github/flusion_model/data"</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">output_dir =</span> <span class="st">"D:/Github/flusion/data"</span></span>
 <span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
@@ -1222,7 +1224,7 @@ Files illustrated here were downloaded on June 2, 2023.</p>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Reading layer `us-state-boundaries' from data source 
-  `D:\Github\flusion_model\data\2010-01-01-CovidCAR-run2023-06-08\polygons' 
+  `D:\Github\flusion\data\2010-01-01-CovidCAR-run2023-06-08\polygons' 
   using driver `ESRI Shapefile'
 Simple feature collection with 56 features and 20 fields
 Geometry type: MULTIPOLYGON
@@ -2311,7 +2313,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
+      var filterRegex = new RegExp(/https:\/\/jmhumphreys\.github\.io\/flusion\//);
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href);
     }

@@ -130,6 +130,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 <link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="Data Organization">
+<meta property="og:description" content="Formatting data as list() objects and DataStacks for model input.">
 </head>
 
 <body class="nav-sidebar floating">
@@ -157,12 +159,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <a href="" title="" id="sidebar-tool-dropdown-0" class="sidebar-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-github"></i></a>
     <ul class="dropdown-menu" aria-labelledby="sidebar-tool-dropdown-0">
         <li>
-          <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/JMHumphreys/flusion_model">
+          <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/JMHumphreys/flusion">
           Source Code
           </a>
         </li>
         <li>
-          <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/JMHumphreys/flusion_model/issues">
+          <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/JMHumphreys/flusion/issues">
           Report a Bug
           </a>
         </li>
@@ -187,7 +189,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../index.html" class="sidebar-item-text sidebar-link">Flusions greetings</a>
+  <a href="../../index.html" class="sidebar-item-text sidebar-link">Welcome to f(l)usion</a>
   </div>
 </li>
       </ul>
@@ -297,7 +299,7 @@ pre {
 <section id="overview" class="level1">
 <h1>Overview</h1>
 <p>Organizing data for a three-part joint model can be complex. This script walks through <em>DataStack</em> construction where a DataStack is a list object that holds all data for model fitting. Because this is a three-part model, DataStacks will be created for each submodel (e.g., an ILI submodel, a NREVSS submodel, and a HHS submodel) then the three submodel DataStacks will be combined as a <em>joint_stack</em>. As part of DataStack construction, a three-part response/dependent variable will be specified as a three-column matrix.</p>
-<p><strong>Note:</strong> This script requires that data <a href="file:///D:/Github/flusion_model/docs/construction/preprocessing/preprocessing.html"><strong>Preprocessing</strong></a> has already been completed and all <strong>Preprocessing</strong> objects are available in the working environment.</p>
+<p><strong>Note:</strong> This script requires that data <a href="https://jmhumphreys.github.io/flusion/construction/preprocessing/preprocessing.html"><strong>Preprocessing</strong></a> has already been completed and all <strong>Preprocessing</strong> objects are available in the working environment.</p>
 <div class="cell">
 
 </div>
@@ -737,7 +739,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
+      var filterRegex = new RegExp(/https:\/\/jmhumphreys\.github\.io\/flusion\//);
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href);
     }

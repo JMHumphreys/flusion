@@ -130,6 +130,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 <link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="Model Inference">
+<meta property="og:description" content="Constructing formula and running the model.">
 </head>
 
 <body class="nav-sidebar floating">
@@ -157,12 +159,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <a href="" title="" id="sidebar-tool-dropdown-0" class="sidebar-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-github"></i></a>
     <ul class="dropdown-menu" aria-labelledby="sidebar-tool-dropdown-0">
         <li>
-          <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/JMHumphreys/flusion_model">
+          <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/JMHumphreys/flusion">
           Source Code
           </a>
         </li>
         <li>
-          <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/JMHumphreys/flusion_model/issues">
+          <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/JMHumphreys/flusion/issues">
           Report a Bug
           </a>
         </li>
@@ -187,7 +189,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../index.html" class="sidebar-item-text sidebar-link">Flusions greetings</a>
+  <a href="../../index.html" class="sidebar-item-text sidebar-link">Welcome to f(l)usion</a>
   </div>
 </li>
       </ul>
@@ -293,7 +295,7 @@ pre {
 <section id="overview" class="level1">
 <h1>Overview</h1>
 <p>Having completed data preprocessing and data organization, a formula is constructed and the model run.</p>
-<p><strong>Note:</strong> This script requires that both the data <a href="file:///D:/Github/flusion_model/docs/construction/preprocessing/preprocessing.html"><strong>Preprocessing</strong></a> and the <a href="file:///D:/Github/flusion_model/docs/construction/organize/organize.html"><strong>Data Organization</strong></a> have already been completed with all resulting objects available in the working environment.</p>
+<p><strong>Note:</strong> This script requires that both the data <a href="https://jmhumphreys.github.io/flusion/construction/preprocessing/preprocessing.html"><strong>Preprocessing</strong></a> and the <a href="https://jmhumphreys.github.io/flusion/construction/organize/organize.html"><strong>Data Organization</strong></a> have already been completed with all resulting objects available in the working environment.</p>
 <div class="cell">
 
 </div>
@@ -671,7 +673,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
+      var filterRegex = new RegExp(/https:\/\/jmhumphreys\.github\.io\/flusion\//);
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href);
     }

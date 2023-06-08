@@ -1,1 +1,1 @@
-Sitemap: https://jmhumphreys.github.io/flusion_model/sitemap.xml
+Sitemap: https://jmhumphreys.github.io/flusion/sitemap.xml

@@ -19,9 +19,8 @@ editor_options:
   chunk_output_type: console
 ---
 
-# Welcome to f(l)usion 
-Work in progress! 
+# Welcome to f(l)usion
+
+Work in progress!
 
 ### Download *f(l)usion* Data
-
-
