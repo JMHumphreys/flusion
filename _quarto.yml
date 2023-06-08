@@ -7,7 +7,7 @@ execute:
   
 website:
   page-navigation: true
-  site-url: https://jmhumphreys.github.io/flusion_model/
+  site-url: https://jmhumphreys.github.io/flusion/
   open-graph: true
   sidebar:
     style: "floating"
@@ -17,9 +17,9 @@ website:
       - icon: github
         menu:
           - text: Source Code
-            url:  https://github.com/JMHumphreys/flusion_model
+            url:  https://github.com/JMHumphreys/flusion
           - text: Report a Bug
-            url:  https://github.com/JMHumphreys/flusion_model/issues
+            url:  https://github.com/JMHumphreys/flusion/issues
     contents:
       - section: "Overview"
         contents:
