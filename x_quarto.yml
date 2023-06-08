@@ -7,33 +7,24 @@ execute:
   
 website:
   page-navigation: true
+  title: "f(l)usion"
   site-url: https://jmhumphreys.github.io/flusion_model/
   open-graph: true
-  sidebar:
-    style: "floating"
-    logo: images/flusion.png
-    search: true
-    tools:
+  #favicon: images/biogeo.png
+  navbar:
+    #logo: images/logo-bg.png
+    title: "f(l)usion"
+    right:
+      - href: index.qmd
+        text: Home
+      - href: cons_index.qmd
+        text: Construction
       - icon: github
         menu:
           - text: Source Code
             url:  https://github.com/JMHumphreys/flusion_model
           - text: Report a Bug
             url:  https://github.com/JMHumphreys/flusion_model/issues
-    contents:
-      - section: "Overview"
-        contents:
-          - index.qmd
-      - section: "Explore the Data"
-        contents:
-          - explore.qmd
-      - text: "---"
-      - section: "Model Construction"
-        contents:
-          - construction/preprocessing/preprocessing.qmd
-          - construction/organize/organize.qmd
-          - construction/model/model.qmd
-          - construction/results/results.qmd
   page-footer:
     border: false
     left: "Published with [Quarto](https://quarto.org/) v1.2.335"

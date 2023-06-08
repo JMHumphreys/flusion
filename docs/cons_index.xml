@@ -1,0 +1,2207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss  xmlns:atom="http://www.w3.org/2005/Atom" 
+      xmlns:media="http://search.yahoo.com/mrss/" 
+      xmlns:content="http://purl.org/rss/1.0/modules/content/" 
+      xmlns:dc="http://purl.org/dc/elements/1.1/" 
+      version="2.0">
+<channel>
+<title>f(l)usion</title>
+<link>https://jmhumphreys.github.io/flusion_model/cons_index.html</link>
+<atom:link href="https://jmhumphreys.github.io/flusion_model/cons_index.xml" rel="self" type="application/rss+xml"/>
+<description></description>
+<generator>quarto-1.2.335</generator>
+<lastBuildDate>Thu, 08 Jun 2023 19:17:24 GMT</lastBuildDate>
+<item>
+  <title>f(l)usion Model</title>
+  <link>https://jmhumphreys.github.io/flusion_model/construction/model/model.html</link>
+  <description><![CDATA[ 
+
+
+
+<style type="text/css">
+
+body, td {
+   font-size: 13pt;
+}
+code.r{
+  font-size: 9pt;
+}
+pre {
+  font-size: 11pt
+}
+</style>
+<section id="overview" class="level1">
+<h1>Overview</h1>
+<p>Having completed data preprocessing and data organization, a formula is constructed and the model run.</p>
+<p><strong>Note:</strong> This script requires that both the data <a href="file:///D:/Github/flusion_model/docs/construction/preprocessing/preprocessing.html"><strong>Preprocessing</strong></a> and the <a href="file:///D:/Github/flusion_model/docs/construction/organize/organize.html"><strong>Data Organization</strong></a> have already been completed with all resulting objects available in the working environment.</p>
+<div class="cell">
+
+</div>
+</section>
+<section id="prior-specifications" class="level1">
+<h1>Prior Specifications</h1>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><span class="co" style="color: #5E5E5E;">#PC Prior</span></span>
+<span id="cb1-2">pcprior1 <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">prec =</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">prior=</span><span class="st" style="color: #20794D;">"pc.prec"</span>, <span class="at" style="color: #657422;">param =</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="dv" style="color: #AD0000;">1</span>, <span class="fl" style="color: #AD0000;">0.001</span>)))</span>
+<span id="cb1-3"></span>
+<span id="cb1-4"><span class="co" style="color: #5E5E5E;">#bym prior</span></span>
+<span id="cb1-5">bym_hyper <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">phi =</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">prior =</span> <span class="st" style="color: #20794D;">"pc"</span>, </span>
+<span id="cb1-6">                      <span class="at" style="color: #657422;">param =</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="fl" style="color: #AD0000;">0.5</span>, <span class="fl" style="color: #AD0000;">0.5</span>)), </span>
+<span id="cb1-7">               <span class="at" style="color: #657422;">prec =</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">prior =</span> <span class="st" style="color: #20794D;">"pc.prec"</span>, </span>
+<span id="cb1-8">                       <span class="at" style="color: #657422;">param =</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="dv" style="color: #AD0000;">1</span>, <span class="fl" style="color: #AD0000;">0.01</span>)))  </span>
+<span id="cb1-9"></span>
+<span id="cb1-10"><span class="co" style="color: #5E5E5E;">#iid prior</span></span>
+<span id="cb1-11">pc_prec_iid <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">theta =</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">prior=</span><span class="st" style="color: #20794D;">"pc.prec"</span>, </span>
+<span id="cb1-12">                                 <span class="at" style="color: #657422;">param=</span><span class="fu" style="color: #4758AB;">c</span>(<span class="fl" style="color: #AD0000;">0.5</span>, <span class="fl" style="color: #AD0000;">0.01</span>)))</span>
+<span id="cb1-13"></span>
+<span id="cb1-14"><span class="co" style="color: #5E5E5E;">#ar1 prior</span></span>
+<span id="cb1-15">pc_cor_ar1 <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">theta =</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">prior =</span> <span class="st" style="color: #20794D;">'pccor1'</span>, </span>
+<span id="cb1-16">                                <span class="at" style="color: #657422;">param =</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="fl" style="color: #AD0000;">0.5</span>, <span class="fl" style="color: #AD0000;">0.5</span>)))</span>
+<span id="cb1-17"></span>
+<span id="cb1-18"><span class="co" style="color: #5E5E5E;">#rw2 prior</span></span>
+<span id="cb1-19">pc_rw <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">prec=</span><span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">prior=</span><span class="st" style="color: #20794D;">"pc.prec"</span>, </span>
+<span id="cb1-20">                        <span class="at" style="color: #657422;">param=</span><span class="fu" style="color: #4758AB;">c</span>(<span class="fl" style="color: #AD0000;">0.5</span>,<span class="fl" style="color: #AD0000;">0.01</span>)))</span></code></pre></div>
+</details>
+</div>
+</section>
+<section id="joint-model-formula" class="level1">
+<h1>Joint Model Formula</h1>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1">Frm<span class="fl" style="color: #AD0000;">.1</span> <span class="ot" style="color: #003B4F;">=</span> Y <span class="sc" style="color: #5E5E5E;">~</span> <span class="sc" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span> <span class="sc" style="color: #5E5E5E;">+</span> intercept1 <span class="sc" style="color: #5E5E5E;">+</span> <span class="co" style="color: #5E5E5E;">#intercept for ILI submodel</span></span>
+<span id="cb2-2">                 intercept2 <span class="sc" style="color: #5E5E5E;">+</span> <span class="co" style="color: #5E5E5E;">#intercept for NREVSS submodel</span></span>
+<span id="cb2-3">                 intercept3 <span class="sc" style="color: #5E5E5E;">+</span> <span class="co" style="color: #5E5E5E;">#intercept for HHS submodel</span></span>
+<span id="cb2-4">                   l.pop.ili <span class="sc" style="color: #5E5E5E;">+</span> <span class="co" style="color: #5E5E5E;">#log-population: could have been combined, but</span></span>
+<span id="cb2-5">                   l.pop.nv <span class="sc" style="color: #5E5E5E;">+</span>  <span class="co" style="color: #5E5E5E;">#wanted to see if effect differd   </span></span>
+<span id="cb2-6">                   l.pop.hhs <span class="sc" style="color: #5E5E5E;">+</span> <span class="co" style="color: #5E5E5E;">#by submodel</span></span>
+<span id="cb2-7">                      <span class="fu" style="color: #4758AB;">f</span>(Region.<span class="fl" style="color: #AD0000;">1.</span>ili, <span class="co" style="color: #5E5E5E;"># location index specific to ILI submodel</span></span>
+<span id="cb2-8">                         <span class="at" style="color: #657422;">model=</span><span class="st" style="color: #20794D;">"bym2"</span>, <span class="co" style="color: #5E5E5E;">#Besag-Mollie-York model (spatial + region IID)</span></span>
+<span id="cb2-9">                         <span class="at" style="color: #657422;">graph=</span>J,      <span class="co" style="color: #5E5E5E;">#neighborhood adjacency matrix</span></span>
+<span id="cb2-10">                         <span class="at" style="color: #657422;">constr=</span><span class="cn" style="color: #8f5902;">TRUE</span>,  <span class="co" style="color: #5E5E5E;">#enforce a zero-mean latent field</span></span>
+<span id="cb2-11">                         <span class="at" style="color: #657422;">group =</span> year.ili, <span class="co" style="color: #5E5E5E;">#Annual time steps,year-specific spatial fields</span></span>
+<span id="cb2-12">                         <span class="at" style="color: #657422;">control.group=</span><span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">model=</span><span class="st" style="color: #20794D;">"ar1"</span>), <span class="co" style="color: #5E5E5E;">#order-1 autoregressive between annual fields</span></span>
+<span id="cb2-13">                         <span class="at" style="color: #657422;">hyper=</span>bym_hyper) <span class="sc" style="color: #5E5E5E;">+</span> <span class="co" style="color: #5E5E5E;">#prior</span></span>
+<span id="cb2-14">                      <span class="fu" style="color: #4758AB;">f</span>(Region.<span class="fl" style="color: #AD0000;">1.</span>nv,   <span class="co" style="color: #5E5E5E;"># As above but specific to NREVSS submodel</span></span>
+<span id="cb2-15">                         <span class="at" style="color: #657422;">model=</span><span class="st" style="color: #20794D;">"bym2"</span>,</span>
+<span id="cb2-16">                         <span class="at" style="color: #657422;">graph=</span>J,</span>
+<span id="cb2-17">                         <span class="at" style="color: #657422;">constr=</span><span class="cn" style="color: #8f5902;">TRUE</span>,</span>
+<span id="cb2-18">                         <span class="at" style="color: #657422;">group =</span> year.nv<span class="fl" style="color: #AD0000;">.1</span>, </span>
+<span id="cb2-19">                         <span class="at" style="color: #657422;">control.group=</span><span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">model=</span><span class="st" style="color: #20794D;">"ar1"</span>),</span>
+<span id="cb2-20">                         <span class="at" style="color: #657422;">hyper=</span>bym_hyper) <span class="sc" style="color: #5E5E5E;">+</span> </span>
+<span id="cb2-21">                      <span class="fu" style="color: #4758AB;">f</span>(Region.<span class="fl" style="color: #AD0000;">2.</span>nv,   <span class="co" style="color: #5E5E5E;"># Create a copy of ILI BYM model, and share it with NREVSS submodel</span></span>
+<span id="cb2-22">                         <span class="at" style="color: #657422;">copy=</span><span class="st" style="color: #20794D;">"Region.1.ili"</span>, <span class="co" style="color: #5E5E5E;">#what to copy</span></span>
+<span id="cb2-23">                         <span class="at" style="color: #657422;">group =</span> year.nv<span class="fl" style="color: #AD0000;">.2</span>,</span>
+<span id="cb2-24">                         <span class="at" style="color: #657422;">fixed=</span><span class="cn" style="color: #8f5902;">FALSE</span>) <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb2-25">                      <span class="fu" style="color: #4758AB;">f</span>(Region.<span class="fl" style="color: #AD0000;">1.</span>hhs,  <span class="co" style="color: #5E5E5E;"># Besag-Mollie-York model specific to HHS submodel</span></span>
+<span id="cb2-26">                         <span class="at" style="color: #657422;">model=</span><span class="st" style="color: #20794D;">"bym2"</span>, <span class="co" style="color: #5E5E5E;">#as above</span></span>
+<span id="cb2-27">                         <span class="at" style="color: #657422;">graph=</span>J,</span>
+<span id="cb2-28">                         <span class="at" style="color: #657422;">constr=</span><span class="cn" style="color: #8f5902;">TRUE</span>, </span>
+<span id="cb2-29">                         <span class="at" style="color: #657422;">group =</span> year.hhs<span class="fl" style="color: #AD0000;">.1</span>,</span>
+<span id="cb2-30">                         <span class="at" style="color: #657422;">control.group=</span><span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">model=</span><span class="st" style="color: #20794D;">"ar1"</span>),</span>
+<span id="cb2-31">                         <span class="at" style="color: #657422;">hyper=</span>bym_hyper) <span class="sc" style="color: #5E5E5E;">+</span> </span>
+<span id="cb2-32">                      <span class="fu" style="color: #4758AB;">f</span>(Region.<span class="fl" style="color: #AD0000;">2.</span>hhs, <span class="co" style="color: #5E5E5E;"># Create a copy of ILI BYM model, and share it with HHS submodel</span></span>
+<span id="cb2-33">                         <span class="at" style="color: #657422;">copy=</span><span class="st" style="color: #20794D;">"Region.1.ili"</span>,</span>
+<span id="cb2-34">                         <span class="at" style="color: #657422;">group =</span> year.hhs<span class="fl" style="color: #AD0000;">.2</span>,</span>
+<span id="cb2-35">                         <span class="at" style="color: #657422;">fixed=</span><span class="cn" style="color: #8f5902;">FALSE</span>) <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb2-36">                      <span class="fu" style="color: #4758AB;">f</span>(Region.<span class="fl" style="color: #AD0000;">3.</span>hhs,  <span class="co" style="color: #5E5E5E;"># Create a copy of NREVSS BYM model, and share it with HHS submodel</span></span>
+<span id="cb2-37">                         <span class="at" style="color: #657422;">copy=</span><span class="st" style="color: #20794D;">"Region.1.nv"</span>,</span>
+<span id="cb2-38">                         <span class="at" style="color: #657422;">group =</span> year.hhs<span class="fl" style="color: #AD0000;">.3</span>,</span>
+<span id="cb2-39">                         <span class="at" style="color: #657422;">fixed=</span><span class="cn" style="color: #8f5902;">FALSE</span>) <span class="sc" style="color: #5E5E5E;">+</span> </span>
+<span id="cb2-40">                      <span class="fu" style="color: #4758AB;">f</span>(ts_week.<span class="fl" style="color: #AD0000;">1.</span>nv, <span class="co" style="color: #5E5E5E;"># Use model etimates from NREVSS submodel to identify seasonality          </span></span>
+<span id="cb2-41">                         <span class="at" style="color: #657422;">constr=</span><span class="cn" style="color: #8f5902;">TRUE</span>,</span>
+<span id="cb2-42">                         <span class="at" style="color: #657422;">scale.model =</span> <span class="cn" style="color: #8f5902;">TRUE</span>,</span>
+<span id="cb2-43">                         <span class="at" style="color: #657422;">model=</span><span class="st" style="color: #20794D;">"seasonal"</span>,</span>
+<span id="cb2-44">                         <span class="at" style="color: #657422;">season.length =</span> <span class="dv" style="color: #AD0000;">52</span>, <span class="co" style="color: #5E5E5E;">#guess at how many weeks between seasonal cycles</span></span>
+<span id="cb2-45">                         <span class="at" style="color: #657422;">hyper=</span>pcprior1) <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb2-46">                      <span class="fu" style="color: #4758AB;">f</span>(ts_week.<span class="fl" style="color: #AD0000;">2.</span>nv,       <span class="co" style="color: #5E5E5E;"># IID term to account for variation outside of          </span></span>
+<span id="cb2-47">                         <span class="at" style="color: #657422;">constr=</span><span class="cn" style="color: #8f5902;">TRUE</span>,        <span class="co" style="color: #5E5E5E;"># seasonal effect above</span></span>
+<span id="cb2-48">                         <span class="at" style="color: #657422;">model=</span><span class="st" style="color: #20794D;">"iid"</span>,</span>
+<span id="cb2-49">                         <span class="at" style="color: #657422;">hyper=</span>pc_prec_iid) <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb2-50">                      <span class="fu" style="color: #4758AB;">f</span>(ts_week.c,          <span class="co" style="color: #5E5E5E;">#  copy seasonal effect to HHS submodel</span></span>
+<span id="cb2-51">                         <span class="at" style="color: #657422;">copy =</span> <span class="st" style="color: #20794D;">"ts_week.1.nv"</span>,</span>
+<span id="cb2-52">                         <span class="at" style="color: #657422;">fixed=</span><span class="cn" style="color: #8f5902;">FALSE</span>) <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb2-53">                      <span class="fu" style="color: #4758AB;">f</span>(ts_week.iid.c,      <span class="co" style="color: #5E5E5E;">#  copy IID extra-seasonal effect to HHS submodel</span></span>
+<span id="cb2-54">                         <span class="at" style="color: #657422;">copy =</span> <span class="st" style="color: #20794D;">"ts_week.2.nv"</span>,</span>
+<span id="cb2-55">                         <span class="at" style="color: #657422;">fixed=</span><span class="cn" style="color: #8f5902;">FALSE</span>) <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb2-56">                      <span class="fu" style="color: #4758AB;">f</span>(en_est.s,          <span class="co" style="color: #5E5E5E;"># perform order-1random walk across all levels based         </span></span>
+<span id="cb2-57">                         <span class="at" style="color: #657422;">constr=</span><span class="cn" style="color: #8f5902;">TRUE</span>,      <span class="co" style="color: #5E5E5E;"># on the temporal pattern exhibited by the FluSurv data</span></span>
+<span id="cb2-58">                         <span class="at" style="color: #657422;">scale.model =</span> <span class="cn" style="color: #8f5902;">TRUE</span>,</span>
+<span id="cb2-59">                         <span class="at" style="color: #657422;">model=</span><span class="st" style="color: #20794D;">"rw1"</span>,</span>
+<span id="cb2-60">                         <span class="at" style="color: #657422;">hyper=</span>pc_rw)</span>
+<span id="cb2-61"></span>
+<span id="cb2-62"></span>
+<span id="cb2-63"><span class="co" style="color: #5E5E5E;"># Mean estimates for all 20 model parameters.  These were estimated by running a smaller, 5yr model. </span></span>
+<span id="cb2-64"><span class="co" style="color: #5E5E5E;"># By providing these initial values, model run times can be accelerated and get better "convergence" (equivalent of)</span></span>
+<span id="cb2-65">theta5 <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="sc" style="color: #5E5E5E;">-</span><span class="fl" style="color: #AD0000;">0.56686743</span>, <span class="sc" style="color: #5E5E5E;">-</span><span class="fl" style="color: #AD0000;">2.10828061</span>, <span class="sc" style="color: #5E5E5E;">-</span><span class="fl" style="color: #AD0000;">1.95713241</span>,  <span class="fl" style="color: #AD0000;">0.06579743</span>, <span class="sc" style="color: #5E5E5E;">-</span><span class="fl" style="color: #AD0000;">0.09814683</span>,  <span class="fl" style="color: #AD0000;">2.61967616</span>, <span class="sc" style="color: #5E5E5E;">-</span><span class="fl" style="color: #AD0000;">1.27387472</span>,  <span class="fl" style="color: #AD0000;">0.19664533</span>,  <span class="fl" style="color: #AD0000;">1.81029996</span>,</span>
+<span id="cb2-66">           <span class="sc" style="color: #5E5E5E;">-</span><span class="fl" style="color: #AD0000;">1.92052717</span>, <span class="sc" style="color: #5E5E5E;">-</span><span class="fl" style="color: #AD0000;">0.69497717</span>,  <span class="fl" style="color: #AD0000;">2.20580332</span>,  <span class="fl" style="color: #AD0000;">5.19657440</span>, <span class="sc" style="color: #5E5E5E;">-</span><span class="fl" style="color: #AD0000;">2.17964335</span>, <span class="sc" style="color: #5E5E5E;">-</span><span class="fl" style="color: #AD0000;">2.24216194</span>, <span class="sc" style="color: #5E5E5E;">-</span><span class="fl" style="color: #AD0000;">0.12524395</span>,  <span class="fl" style="color: #AD0000;">0.60062266</span>,  <span class="fl" style="color: #AD0000;">0.20796619</span>,</span>
+<span id="cb2-67">           <span class="fl" style="color: #AD0000;">0.63707468</span>,  <span class="fl" style="color: #AD0000;">0.49558648</span>)</span>
+<span id="cb2-68"></span>
+<span id="cb2-69">Joint.mod <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">inla</span>(Frm<span class="fl" style="color: #AD0000;">.1</span>, <span class="co" style="color: #5E5E5E;">#formula from above</span></span>
+<span id="cb2-70">                     <span class="co" style="color: #5E5E5E;">#num.threads = 8,</span></span>
+<span id="cb2-71">                     <span class="at" style="color: #657422;">data =</span> <span class="fu" style="color: #4758AB;">inla.stack.data</span>(joint_stack), <span class="co" style="color: #5E5E5E;"># combined DataStack with substacks for all submodels</span></span>
+<span id="cb2-72">                     <span class="at" style="color: #657422;">family =</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="st" style="color: #20794D;">"gaussian"</span>, <span class="st" style="color: #20794D;">"gaussian"</span>,<span class="st" style="color: #20794D;">"gaussian"</span>), <span class="co" style="color: #5E5E5E;">#responses are normal</span></span>
+<span id="cb2-73">                     <span class="at" style="color: #657422;">verbose =</span> <span class="cn" style="color: #8f5902;">TRUE</span>, <span class="co" style="color: #5E5E5E;"># print run process to screen</span></span>
+<span id="cb2-74">                     <span class="at" style="color: #657422;">control.fixed =</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">prec =</span> <span class="dv" style="color: #AD0000;">1</span>, <span class="co" style="color: #5E5E5E;"># proper intercept</span></span>
+<span id="cb2-75">                                          <span class="at" style="color: #657422;">prec.intercept =</span> <span class="dv" style="color: #AD0000;">1</span>), </span>
+<span id="cb2-76">                     <span class="at" style="color: #657422;">control.predictor =</span> <span class="fu" style="color: #4758AB;">list</span>(</span>
+<span id="cb2-77">                                                 <span class="at" style="color: #657422;">A =</span> <span class="fu" style="color: #4758AB;">inla.stack.A</span>(joint_stack), </span>
+<span id="cb2-78">                                         <span class="at" style="color: #657422;">compute =</span> <span class="cn" style="color: #8f5902;">TRUE</span>, <span class="co" style="color: #5E5E5E;"># include fitted values</span></span>
+<span id="cb2-79">                                              <span class="at" style="color: #657422;">link =</span> <span class="dv" style="color: #AD0000;">1</span>), <span class="co" style="color: #5E5E5E;">#default link function settings</span></span>
+<span id="cb2-80">                     <span class="at" style="color: #657422;">control.mode =</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">restart =</span> <span class="cn" style="color: #8f5902;">TRUE</span>, <span class="at" style="color: #657422;">theta =</span> theta5), <span class="co" style="color: #5E5E5E;">#initial values above</span></span>
+<span id="cb2-81">                     <span class="at" style="color: #657422;">control.inla =</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">strategy=</span><span class="st" style="color: #20794D;">"gaussian"</span>, <span class="co" style="color: #5E5E5E;">#strategy to speed up</span></span>
+<span id="cb2-82">                                                       <span class="at" style="color: #657422;">int.strategy =</span> <span class="st" style="color: #20794D;">"eb"</span>), <span class="co" style="color: #5E5E5E;">#empirical Bayes (based on modes)</span></span>
+<span id="cb2-83">                     <span class="at" style="color: #657422;">control.compute=</span><span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">dic =</span> F, <span class="at" style="color: #657422;">cpo =</span> F, <span class="at" style="color: #657422;">waic =</span> F)) <span class="co" style="color: #5E5E5E;"># these just slow the run down</span></span>
+<span id="cb2-84"></span>
+<span id="cb2-85"><span class="co" style="color: #5E5E5E;">#save resulting model and inputs  </span></span>
+<span id="cb2-86"><span class="co" style="color: #5E5E5E;">#save(list=c("Joint.mod", "J", "joint_stack"), file="./runs/initial6.RData", version = 2)</span></span></code></pre></div>
+</details>
+</div>
+</section>
+<section id="next-step-inspect-model-results" class="level1">
+<h1>Next Step: Inspect Model results</h1>
+
+
+</section>
+
+ ]]></description>
+  <guid>https://jmhumphreys.github.io/flusion_model/construction/model/model.html</guid>
+  <pubDate>Thu, 08 Jun 2023 19:17:24 GMT</pubDate>
+</item>
+<item>
+  <title>Data Organization</title>
+  <link>https://jmhumphreys.github.io/flusion_model/construction/organize/organize.html</link>
+  <description><![CDATA[ 
+
+
+
+<style type="text/css">
+
+body, td {
+   font-size: 13pt;
+}
+code.r{
+  font-size: 9pt;
+}
+pre {
+  font-size: 11pt
+}
+</style>
+<section id="overview" class="level1">
+<h1>Overview</h1>
+<p>Organizing data for a three-part joint model can be complex. This script walks through <em>DataStack</em> construction where a DataStack is a list object that holds all data for model fitting. Because this is a three-part model, DataStacks will be created for each submodel (e.g., an ILI submodel, a NREVSS submodel, and a HHS submodel) then the three submodel DataStacks will be combined as a <em>joint_stack</em>. As part of DataStack construction, a three-part response/dependent variable will be specified as a three-column matrix.</p>
+<p><strong>Note:</strong> This script requires that data <a href="file:///D:/Github/flusion_model/docs/construction/preprocessing/preprocessing.html"><strong>Preprocessing</strong></a> has already been completed and all <strong>Preprocessing</strong> objects are available in the working environment.</p>
+<div class="cell">
+
+</div>
+<section id="ili-datastack" class="level2">
+<h2 class="anchored" data-anchor-id="ili-datastack">ILI DataStack</h2>
+<p>The ILI model will occupy the base level of the joint model and pass <em>information</em> to both the middle level submodel (NREVSS) and the top level HHS submodel.</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1">ilinet_full <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">as.data.frame</span>(ilinet_full) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb1-2">  <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">y_ili =</span> unweighted.s, <span class="co" style="color: #5E5E5E;">#Response variable, logit transformed percentage of influenza-like illnesses.</span></span>
+<span id="cb1-3">         <span class="at" style="color: #657422;">l.pop.ili =</span> <span class="fu" style="color: #4758AB;">log</span>(population), <span class="co" style="color: #5E5E5E;">#log population size</span></span>
+<span id="cb1-4">         <span class="at" style="color: #657422;">Region.1.ili =</span> Region, <span class="co" style="color: #5E5E5E;">#an identifier for each location (i.e., States and Territories)</span></span>
+<span id="cb1-5">         <span class="at" style="color: #657422;">Region.2.ili =</span> Region,</span>
+<span id="cb1-6">         <span class="at" style="color: #657422;">Region.3.ili =</span> Region,</span>
+<span id="cb1-7">         <span class="at" style="color: #657422;">Region.4.ili =</span> Region,</span>
+<span id="cb1-8">         <span class="at" style="color: #657422;">ts_week.1.ili =</span> ts_week, <span class="co" style="color: #5E5E5E;">#integer time step for epiweeks 2010 to 2023-epiweek-22</span></span>
+<span id="cb1-9">         <span class="at" style="color: #657422;">ts_week.2.ili =</span> ts_week,</span>
+<span id="cb1-10">         <span class="at" style="color: #657422;">ts_week.3.ili =</span> ts_week,</span>
+<span id="cb1-11">         <span class="at" style="color: #657422;">ts_week.4.ili =</span> ts_week,</span>
+<span id="cb1-12">         <span class="at" style="color: #657422;">state.ili =</span> abbreviation, <span class="co" style="color: #5E5E5E;">#State abbreviations</span></span>
+<span id="cb1-13">         <span class="at" style="color: #657422;">year.ili =</span> <span class="fu" style="color: #4758AB;">as.integer</span>(<span class="fu" style="color: #4758AB;">as.factor</span>(year)), <span class="co" style="color: #5E5E5E;">#integer time step for years</span></span>
+<span id="cb1-14">         <span class="at" style="color: #657422;">year.ili.1 =</span> <span class="fu" style="color: #4758AB;">as.integer</span>(<span class="fu" style="color: #4758AB;">as.factor</span>(year)),</span>
+<span id="cb1-15">         <span class="at" style="color: #657422;">year.ili.2 =</span> <span class="fu" style="color: #4758AB;">as.integer</span>(<span class="fu" style="color: #4758AB;">as.factor</span>(year)),</span>
+<span id="cb1-16">         <span class="at" style="color: #657422;">year.ili.3 =</span> <span class="fu" style="color: #4758AB;">as.integer</span>(<span class="fu" style="color: #4758AB;">as.factor</span>(year)),</span>
+<span id="cb1-17">         <span class="at" style="color: #657422;">source =</span> <span class="dv" style="color: #AD0000;">1</span>) <span class="co" style="color: #5E5E5E;">#just an ID to identify ILI data</span></span>
+<span id="cb1-18"></span>
+<span id="cb1-19"></span>
+<span id="cb1-20"></span>
+<span id="cb1-21">ili.lst <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">intercept1 =</span> <span class="fu" style="color: #4758AB;">rep</span>(<span class="dv" style="color: #AD0000;">1</span>, <span class="fu" style="color: #4758AB;">dim</span>(ilinet_full)[<span class="dv" style="color: #AD0000;">1</span>])), <span class="co" style="color: #5E5E5E;">#custom intercept</span></span>
+<span id="cb1-22">          <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">l.pop.ili =</span> ilinet_full[,<span class="st" style="color: #20794D;">"l.pop.ili"</span>],  <span class="co" style="color: #5E5E5E;">#log-population              </span></span>
+<span id="cb1-23">               <span class="at" style="color: #657422;">year.ili =</span> ilinet_full[,<span class="st" style="color: #20794D;">"year.ili"</span>],</span>
+<span id="cb1-24">               <span class="at" style="color: #657422;">en_est.s =</span> ilinet_full[,<span class="st" style="color: #20794D;">"en_est.s"</span>], <span class="co" style="color: #5E5E5E;">#amplitude of temporal trend in FluSurv cases</span></span>
+<span id="cb1-25">               <span class="at" style="color: #657422;">year.ili.1 =</span> ilinet_full[,<span class="st" style="color: #20794D;">"year.ili.1"</span>],</span>
+<span id="cb1-26">               <span class="at" style="color: #657422;">year.ili.2 =</span> ilinet_full[,<span class="st" style="color: #20794D;">"year.ili.2"</span>],</span>
+<span id="cb1-27">               <span class="at" style="color: #657422;">year.ili.3 =</span> ilinet_full[,<span class="st" style="color: #20794D;">"year.ili.3"</span>],</span>
+<span id="cb1-28">               <span class="at" style="color: #657422;">ts_week =</span> ilinet_full[,<span class="st" style="color: #20794D;">"ts_week.1.ili"</span>],</span>
+<span id="cb1-29">               <span class="at" style="color: #657422;">ts_week.iid =</span> ilinet_full[,<span class="st" style="color: #20794D;">"ts_week.1.ili"</span>],</span>
+<span id="cb1-30">               <span class="at" style="color: #657422;">ts_week.1.ili =</span> ilinet_full[,<span class="st" style="color: #20794D;">"ts_week.1.ili"</span>],</span>
+<span id="cb1-31">               <span class="at" style="color: #657422;">ts_week.2.ili =</span> ilinet_full[,<span class="st" style="color: #20794D;">"ts_week.2.ili"</span>],</span>
+<span id="cb1-32">               <span class="at" style="color: #657422;">ts_week.3.ili =</span> ilinet_full[,<span class="st" style="color: #20794D;">"ts_week.3.ili"</span>],</span>
+<span id="cb1-33">               <span class="at" style="color: #657422;">Region =</span> ilinet_full[,<span class="st" style="color: #20794D;">"Region.1.ili"</span>],</span>
+<span id="cb1-34">               <span class="at" style="color: #657422;">Region.1 =</span> ilinet_full[,<span class="st" style="color: #20794D;">"Region.1.ili"</span>],</span>
+<span id="cb1-35">               <span class="at" style="color: #657422;">Region.2 =</span> ilinet_full[,<span class="st" style="color: #20794D;">"Region.1.ili"</span>],</span>
+<span id="cb1-36">               <span class="at" style="color: #657422;">Region.cross =</span> ilinet_full[,<span class="st" style="color: #20794D;">"Region.1.ili"</span>],</span>
+<span id="cb1-37">               <span class="at" style="color: #657422;">Region.1.ili =</span> ilinet_full[,<span class="st" style="color: #20794D;">"Region.1.ili"</span>],</span>
+<span id="cb1-38">               <span class="at" style="color: #657422;">Region.2.ili =</span> ilinet_full[,<span class="st" style="color: #20794D;">"Region.2.ili"</span>],</span>
+<span id="cb1-39">               <span class="at" style="color: #657422;">Region.3.ili =</span> ilinet_full[,<span class="st" style="color: #20794D;">"Region.3.ili"</span>],</span>
+<span id="cb1-40">               <span class="at" style="color: #657422;">Region.4.ili =</span> ilinet_full[,<span class="st" style="color: #20794D;">"Region.4.ili"</span>],</span>
+<span id="cb1-41">               <span class="at" style="color: #657422;">st_int.ili =</span> ilinet_full[,<span class="st" style="color: #20794D;">"st_int"</span>], <span class="co" style="color: #5E5E5E;">#State-Time interactions</span></span>
+<span id="cb1-42">               <span class="at" style="color: #657422;">state.ili =</span> ilinet_full[,<span class="st" style="color: #20794D;">"state.ili"</span>],</span>
+<span id="cb1-43">               <span class="at" style="color: #657422;">dsource =</span> ilinet_full[,<span class="st" style="color: #20794D;">"source"</span>]))</span>
+<span id="cb1-44"></span>
+<span id="cb1-45"><span class="co" style="color: #5E5E5E;"># The ILI DataStack</span></span>
+<span id="cb1-46">ili.stk <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">inla.stack</span>(<span class="at" style="color: #657422;">data =</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">Y =</span> <span class="fu" style="color: #4758AB;">cbind</span>(ilinet_full<span class="sc" style="color: #5E5E5E;">$</span>y_ili, <span class="cn" style="color: #8f5902;">NA</span>, <span class="cn" style="color: #8f5902;">NA</span>)), <span class="co" style="color: #5E5E5E;">#base level response in 1st slot, NAs are placeholders for other two</span></span>
+<span id="cb1-47">                                      <span class="at" style="color: #657422;">A =</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="dv" style="color: #AD0000;">1</span>,<span class="dv" style="color: #AD0000;">1</span>),  <span class="co" style="color: #5E5E5E;">#optional matrix object, not used in this analysis     </span></span>
+<span id="cb1-48">                                <span class="at" style="color: #657422;">effects =</span> ili.lst,    <span class="co" style="color: #5E5E5E;"># list object created above with indices and variables   </span></span>
+<span id="cb1-49">                                    <span class="at" style="color: #657422;">tag =</span> <span class="st" style="color: #20794D;">"ili"</span>)      <span class="co" style="color: #5E5E5E;">#arbitrary name/label to pull data later</span></span></code></pre></div>
+</details>
+</div>
+</section>
+<section id="nrevss-set" class="level2">
+<h2 class="anchored" data-anchor-id="nrevss-set">NREVSS Set</h2>
+<p>Similar to ILI DataStack above, creating one for the NREVSS submodel. Note that some variable names are the same as in the ILI DataStack (e.g., Region and st_int) BUT some are specific to this DataStack with a <em>.nv</em> designation: If a variable name is included in the joint model formula, it can only contribute to the submodels that also have it. This provides control such that some variables may be specific to one submodel or one DataStack, whereas other variables may be applicable to all submodels concurrently.</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1">nrevss_full <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">as.data.frame</span>(nrevss_full) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb2-2">  <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">y_nrvs =</span> Apos.s, <span class="co" style="color: #5E5E5E;">#confirmed positive influenza A, logit transformed percentage</span></span>
+<span id="cb2-3">         <span class="at" style="color: #657422;">l.pop.nv =</span> <span class="fu" style="color: #4758AB;">log</span>(population),</span>
+<span id="cb2-4">         <span class="at" style="color: #657422;">Region.1.nv =</span> Region,</span>
+<span id="cb2-5">         <span class="at" style="color: #657422;">Region.2.nv =</span> Region,</span>
+<span id="cb2-6">         <span class="at" style="color: #657422;">Region.3.nv =</span> Region,</span>
+<span id="cb2-7">         <span class="at" style="color: #657422;">Region.4.nv =</span> Region,</span>
+<span id="cb2-8">         <span class="at" style="color: #657422;">ts_week.1.nv =</span> ts_week,</span>
+<span id="cb2-9">         <span class="at" style="color: #657422;">ts_week.2.nv =</span> ts_week,</span>
+<span id="cb2-10">         <span class="at" style="color: #657422;">ts_week.3.nv =</span> ts_week,</span>
+<span id="cb2-11">         <span class="at" style="color: #657422;">ts_week.4.nv =</span> ts_week,</span>
+<span id="cb2-12">         <span class="at" style="color: #657422;">state.nv =</span> abbreviation,</span>
+<span id="cb2-13">         <span class="at" style="color: #657422;">year.nv =</span> <span class="fu" style="color: #4758AB;">as.integer</span>(<span class="fu" style="color: #4758AB;">as.factor</span>(year)),</span>
+<span id="cb2-14">         <span class="at" style="color: #657422;">year.nv.1 =</span> <span class="fu" style="color: #4758AB;">as.integer</span>(<span class="fu" style="color: #4758AB;">as.factor</span>(year)),</span>
+<span id="cb2-15">         <span class="at" style="color: #657422;">year.nv.2 =</span> <span class="fu" style="color: #4758AB;">as.integer</span>(<span class="fu" style="color: #4758AB;">as.factor</span>(year)),</span>
+<span id="cb2-16">         <span class="at" style="color: #657422;">year.nv.3 =</span> <span class="fu" style="color: #4758AB;">as.integer</span>(<span class="fu" style="color: #4758AB;">as.factor</span>(year)),</span>
+<span id="cb2-17">         <span class="at" style="color: #657422;">source =</span> <span class="dv" style="color: #AD0000;">2</span>)</span>
+<span id="cb2-18"></span>
+<span id="cb2-19">nv.lst <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">intercept2 =</span> <span class="fu" style="color: #4758AB;">rep</span>(<span class="dv" style="color: #AD0000;">1</span>, <span class="fu" style="color: #4758AB;">dim</span>(nrevss_full)[<span class="dv" style="color: #AD0000;">1</span>])), <span class="co" style="color: #5E5E5E;"># custom intercept</span></span>
+<span id="cb2-20">          <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">l.pop.nv =</span> nrevss_full[,<span class="st" style="color: #20794D;">"l.pop.nv"</span>], </span>
+<span id="cb2-21">               <span class="at" style="color: #657422;">en_est.s =</span> nrevss_full[,<span class="st" style="color: #20794D;">"en_est.s"</span>],</span>
+<span id="cb2-22">               <span class="at" style="color: #657422;">year.nv =</span> nrevss_full[,<span class="st" style="color: #20794D;">"year.nv"</span>],</span>
+<span id="cb2-23">               <span class="at" style="color: #657422;">year.nv.1 =</span> nrevss_full[,<span class="st" style="color: #20794D;">"year.nv.1"</span>],</span>
+<span id="cb2-24">               <span class="at" style="color: #657422;">year.nv.2 =</span> nrevss_full[,<span class="st" style="color: #20794D;">"year.nv.2"</span>],</span>
+<span id="cb2-25">               <span class="at" style="color: #657422;">year.nv.3 =</span> nrevss_full[,<span class="st" style="color: #20794D;">"year.nv.3"</span>],</span>
+<span id="cb2-26">               <span class="at" style="color: #657422;">ts_week =</span> nrevss_full[,<span class="st" style="color: #20794D;">"ts_week.1.nv"</span>],</span>
+<span id="cb2-27">               <span class="at" style="color: #657422;">ts_week.iid =</span> nrevss_full[,<span class="st" style="color: #20794D;">"ts_week.1.nv"</span>],</span>
+<span id="cb2-28">               <span class="at" style="color: #657422;">ts_week.1.nv =</span> nrevss_full[,<span class="st" style="color: #20794D;">"ts_week.1.nv"</span>],</span>
+<span id="cb2-29">               <span class="at" style="color: #657422;">ts_week.2.nv =</span> nrevss_full[,<span class="st" style="color: #20794D;">"ts_week.2.nv"</span>],</span>
+<span id="cb2-30">               <span class="at" style="color: #657422;">ts_week.3.nv =</span> nrevss_full[,<span class="st" style="color: #20794D;">"ts_week.3.nv"</span>],</span>
+<span id="cb2-31">               <span class="at" style="color: #657422;">Region =</span> nrevss_full[,<span class="st" style="color: #20794D;">"Region.1.nv"</span>],</span>
+<span id="cb2-32">               <span class="at" style="color: #657422;">Region.1 =</span> nrevss_full[,<span class="st" style="color: #20794D;">"Region.1.nv"</span>],</span>
+<span id="cb2-33">               <span class="at" style="color: #657422;">Region.2 =</span> nrevss_full[,<span class="st" style="color: #20794D;">"Region.1.nv"</span>],</span>
+<span id="cb2-34">               <span class="at" style="color: #657422;">Region.cross =</span> nrevss_full[,<span class="st" style="color: #20794D;">"Region.1.nv"</span>],</span>
+<span id="cb2-35">               <span class="at" style="color: #657422;">Region.1.nv =</span> nrevss_full[,<span class="st" style="color: #20794D;">"Region.1.nv"</span>],</span>
+<span id="cb2-36">               <span class="at" style="color: #657422;">Region.2.nv =</span> nrevss_full[,<span class="st" style="color: #20794D;">"Region.2.nv"</span>],</span>
+<span id="cb2-37">               <span class="at" style="color: #657422;">Region.3.nv =</span> nrevss_full[,<span class="st" style="color: #20794D;">"Region.3.nv"</span>],</span>
+<span id="cb2-38">               <span class="at" style="color: #657422;">Region.4.nv =</span> nrevss_full[,<span class="st" style="color: #20794D;">"Region.4.nv"</span>],</span>
+<span id="cb2-39">               <span class="at" style="color: #657422;">st_int =</span> nrevss_full[,<span class="st" style="color: #20794D;">"st_int"</span>],</span>
+<span id="cb2-40">               <span class="at" style="color: #657422;">state.nv =</span> nrevss_full[,<span class="st" style="color: #20794D;">"state.nv"</span>],</span>
+<span id="cb2-41">               <span class="at" style="color: #657422;">dsource =</span> nrevss_full[,<span class="st" style="color: #20794D;">"source"</span>]))</span>
+<span id="cb2-42"></span>
+<span id="cb2-43"></span>
+<span id="cb2-44"><span class="co" style="color: #5E5E5E;">#NREVSS DataStack</span></span>
+<span id="cb2-45">nv.stk <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">inla.stack</span>(<span class="at" style="color: #657422;">data =</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">Y =</span> <span class="fu" style="color: #4758AB;">cbind</span>(<span class="cn" style="color: #8f5902;">NA</span>, nrevss_full<span class="sc" style="color: #5E5E5E;">$</span>y_nrvs, <span class="cn" style="color: #8f5902;">NA</span>)), <span class="co" style="color: #5E5E5E;">#NA in the first and last columns (for ILI and HHS responses)</span></span>
+<span id="cb2-46">                                      <span class="at" style="color: #657422;">A =</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="dv" style="color: #AD0000;">1</span>,<span class="dv" style="color: #AD0000;">1</span>),       </span>
+<span id="cb2-47">                                <span class="at" style="color: #657422;">effects =</span> nv.lst,        </span>
+<span id="cb2-48">                                    <span class="at" style="color: #657422;">tag =</span> <span class="st" style="color: #20794D;">"nrvs"</span>)</span></code></pre></div>
+</details>
+</div>
+</section>
+<section id="hhs-set" class="level2">
+<h2 class="anchored" data-anchor-id="hhs-set">HHS Set</h2>
+<p>Much the same as the ILI and NREVVS DataStacks.</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1">flu_HHS_full <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">as.data.frame</span>(flu_HHS_full) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb3-2">  <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">y_hhs =</span> <span class="fu" style="color: #4758AB;">log</span>(hosp_inc<span class="fl" style="color: #AD0000;">+0.0001</span>), <span class="co" style="color: #5E5E5E;">#log hospital incidence (response variable)</span></span>
+<span id="cb3-3">         <span class="at" style="color: #657422;">l.pop.hhs =</span> <span class="fu" style="color: #4758AB;">log</span>(population),</span>
+<span id="cb3-4">         <span class="at" style="color: #657422;">Region.1.hhs =</span> Region,</span>
+<span id="cb3-5">         <span class="at" style="color: #657422;">Region.2.hhs =</span> Region,</span>
+<span id="cb3-6">         <span class="at" style="color: #657422;">Region.3.hhs =</span> Region,</span>
+<span id="cb3-7">         <span class="at" style="color: #657422;">Region.4.hhs =</span> Region,</span>
+<span id="cb3-8">         <span class="at" style="color: #657422;">ts_week.1.hhs =</span> ts_week,</span>
+<span id="cb3-9">         <span class="at" style="color: #657422;">ts_week.2.hhs =</span> ts_week,</span>
+<span id="cb3-10">         <span class="at" style="color: #657422;">ts_week.3.hhs =</span> ts_week,</span>
+<span id="cb3-11">         <span class="at" style="color: #657422;">ts_week.4.hhs =</span> ts_week,</span>
+<span id="cb3-12">         <span class="at" style="color: #657422;">state.hhs =</span> abbreviation,</span>
+<span id="cb3-13">         <span class="at" style="color: #657422;">year.hhs =</span> <span class="fu" style="color: #4758AB;">as.integer</span>(<span class="fu" style="color: #4758AB;">as.factor</span>(year)),</span>
+<span id="cb3-14">         <span class="at" style="color: #657422;">year.hhs.1 =</span> <span class="fu" style="color: #4758AB;">as.integer</span>(<span class="fu" style="color: #4758AB;">as.factor</span>(year)),</span>
+<span id="cb3-15">         <span class="at" style="color: #657422;">year.hhs.2 =</span> <span class="fu" style="color: #4758AB;">as.integer</span>(<span class="fu" style="color: #4758AB;">as.factor</span>(year)),</span>
+<span id="cb3-16">         <span class="at" style="color: #657422;">year.hhs.3 =</span> <span class="fu" style="color: #4758AB;">as.integer</span>(<span class="fu" style="color: #4758AB;">as.factor</span>(year)),</span>
+<span id="cb3-17">         <span class="at" style="color: #657422;">source =</span> <span class="dv" style="color: #AD0000;">3</span>)</span>
+<span id="cb3-18"></span>
+<span id="cb3-19">hhs.lst <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">intercept3 =</span> <span class="fu" style="color: #4758AB;">rep</span>(<span class="dv" style="color: #AD0000;">1</span>, <span class="fu" style="color: #4758AB;">dim</span>(flu_HHS_full)[<span class="dv" style="color: #AD0000;">1</span>])), </span>
+<span id="cb3-20">          <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">l.pop.hhs =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"l.pop.hhs"</span>], </span>
+<span id="cb3-21">               <span class="at" style="color: #657422;">en_est.s =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"en_est.s"</span>],</span>
+<span id="cb3-22">               <span class="at" style="color: #657422;">year.hhs =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"year.hhs"</span>],</span>
+<span id="cb3-23">               <span class="at" style="color: #657422;">year.hhs.1 =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"year.hhs"</span>],</span>
+<span id="cb3-24">               <span class="at" style="color: #657422;">year.hhs.2 =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"year.hhs"</span>],</span>
+<span id="cb3-25">               <span class="at" style="color: #657422;">year.hhs.3 =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"year.hhs"</span>],</span>
+<span id="cb3-26">               <span class="at" style="color: #657422;">ts_week.c =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"ts_week.1.hhs"</span>],</span>
+<span id="cb3-27">               <span class="at" style="color: #657422;">ts_week.iid.c =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"ts_week.1.hhs"</span>],</span>
+<span id="cb3-28">               <span class="at" style="color: #657422;">ts_week.1.hhs =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"ts_week.1.hhs"</span>],</span>
+<span id="cb3-29">               <span class="at" style="color: #657422;">ts_week.2.hhs =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"ts_week.2.hhs"</span>],</span>
+<span id="cb3-30">               <span class="at" style="color: #657422;">ts_week.3.hhs =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"ts_week.3.hhs"</span>],</span>
+<span id="cb3-31">               <span class="at" style="color: #657422;">Region =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"Region.1.hhs"</span>],</span>
+<span id="cb3-32">               <span class="at" style="color: #657422;">Region.c =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"Region.1.hhs"</span>],</span>
+<span id="cb3-33">               <span class="at" style="color: #657422;">Region.1.c =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"Region.1.hhs"</span>],</span>
+<span id="cb3-34">               <span class="at" style="color: #657422;">Region.2.c =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"Region.1.hhs"</span>],</span>
+<span id="cb3-35">               <span class="at" style="color: #657422;">Region.1.hhs =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"Region.1.hhs"</span>],</span>
+<span id="cb3-36">               <span class="at" style="color: #657422;">Region.2.hhs =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"Region.2.hhs"</span>],</span>
+<span id="cb3-37">               <span class="at" style="color: #657422;">Region.3.hhs =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"Region.3.hhs"</span>],</span>
+<span id="cb3-38">               <span class="at" style="color: #657422;">Region.4.hhs =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"Region.4.hhs"</span>],</span>
+<span id="cb3-39">               <span class="at" style="color: #657422;">state.hhs =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"state.hhs"</span>],</span>
+<span id="cb3-40">               <span class="at" style="color: #657422;">st_int.c =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"st_int"</span>],</span>
+<span id="cb3-41">               <span class="at" style="color: #657422;">dsource =</span> flu_HHS_full[,<span class="st" style="color: #20794D;">"source"</span>]))</span>
+<span id="cb3-42"></span>
+<span id="cb3-43"><span class="co" style="color: #5E5E5E;"># HHS DataStack  </span></span>
+<span id="cb3-44">hhs.stk <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">inla.stack</span>(<span class="at" style="color: #657422;">data =</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="at" style="color: #657422;">Y =</span> <span class="fu" style="color: #4758AB;">cbind</span>(<span class="cn" style="color: #8f5902;">NA</span>, <span class="cn" style="color: #8f5902;">NA</span>, flu_HHS_full<span class="sc" style="color: #5E5E5E;">$</span>y_hhs)), <span class="co" style="color: #5E5E5E;">#NAs for ILI and NREVESS responses, HHS in 3rd spot</span></span>
+<span id="cb3-45">                                      <span class="at" style="color: #657422;">A =</span> <span class="fu" style="color: #4758AB;">list</span>(<span class="dv" style="color: #AD0000;">1</span>,<span class="dv" style="color: #AD0000;">1</span>),       </span>
+<span id="cb3-46">                                <span class="at" style="color: #657422;">effects =</span> hhs.lst,        </span>
+<span id="cb3-47">                                    <span class="at" style="color: #657422;">tag =</span> <span class="st" style="color: #20794D;">"hhs"</span>)   </span></code></pre></div>
+</details>
+</div>
+</section>
+<section id="join-datastacks" class="level2">
+<h2 class="anchored" data-anchor-id="join-datastacks">Join Datastacks</h2>
+<p>Joining all three above DataStacks to a common object, joint DataStack. This is all the data needed for running the model.</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1">joint_stack <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">inla.stack</span>(ili.stk, nv.stk, hhs.stk)</span></code></pre></div>
+</details>
+</div>
+<div class="cell">
+
+</div>
+</section>
+</section>
+<section id="next-step-run-the-model" class="level1">
+<h1><a href="https://jmhumphreys.github.io/flusion_model/construction/model/model.html">Next Step: Run the Model</a></h1>
+
+
+</section>
+
+ ]]></description>
+  <guid>https://jmhumphreys.github.io/flusion_model/construction/organize/organize.html</guid>
+  <pubDate>Thu, 08 Jun 2023 19:17:24 GMT</pubDate>
+</item>
+<item>
+  <title>Preprocessing</title>
+  <link>https://jmhumphreys.github.io/flusion_model/construction/preprocessing/preprocessing.html</link>
+  <description><![CDATA[ 
+
+
+
+<style type="text/css">
+
+body, td {
+   font-size: 13pt;
+}
+code.r{
+  font-size: 9pt;
+}
+pre {
+  font-size: 11pt
+}
+</style>
+<section id="preliminaries" class="level1">
+<h1>Preliminaries</h1>
+<p>Setup working environment and loading necessary packages.</p>
+<section id="libraries" class="level2">
+<h2 class="anchored" data-anchor-id="libraries">Libraries</h2>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><span class="co" style="color: #5E5E5E;">#wrangling</span></span>
+<span id="cb1-2"><span class="fu" style="color: #4758AB;">library</span>(tidyverse)</span>
+<span id="cb1-3"><span class="fu" style="color: #4758AB;">library</span>(lubridate)</span>
+<span id="cb1-4"><span class="fu" style="color: #4758AB;">library</span>(data.table, <span class="at" style="color: #657422;">include.only =</span> <span class="st" style="color: #20794D;">"fread"</span>)</span>
+<span id="cb1-5"><span class="fu" style="color: #4758AB;">library</span>(cdcfluview)</span>
+<span id="cb1-6"><span class="fu" style="color: #4758AB;">library</span>(yaml)</span>
+<span id="cb1-7"></span>
+<span id="cb1-8"><span class="co" style="color: #5E5E5E;">#spatial</span></span>
+<span id="cb1-9"><span class="fu" style="color: #4758AB;">library</span>(sp)</span>
+<span id="cb1-10"><span class="fu" style="color: #4758AB;">library</span>(sf)</span>
+<span id="cb1-11"><span class="fu" style="color: #4758AB;">library</span>(spdep)</span>
+<span id="cb1-12"><span class="fu" style="color: #4758AB;">library</span>(rgeos)</span>
+<span id="cb1-13"><span class="fu" style="color: #4758AB;">library</span>(igraph)</span>
+<span id="cb1-14"><span class="fu" style="color: #4758AB;">library</span>(maptools)</span>
+<span id="cb1-15"><span class="fu" style="color: #4758AB;">library</span>(mapproj)</span>
+<span id="cb1-16"><span class="fu" style="color: #4758AB;">library</span>(CovidCAR)</span>
+<span id="cb1-17"><span class="co" style="color: #5E5E5E;">#devtools::install_github("JMHumphreys/CovidCAR")</span></span>
+<span id="cb1-18"></span>
+<span id="cb1-19"><span class="co" style="color: #5E5E5E;">#messages</span></span>
+<span id="cb1-20"><span class="fu" style="color: #4758AB;">library</span>(cli)</span>
+<span id="cb1-21"></span>
+<span id="cb1-22"><span class="co" style="color: #5E5E5E;">#inference</span></span>
+<span id="cb1-23"><span class="fu" style="color: #4758AB;">library</span>(INLA)</span>
+<span id="cb1-24"></span>
+<span id="cb1-25"><span class="co" style="color: #5E5E5E;">#Utilities</span></span>
+<span id="cb1-26"><span class="co" style="color: #5E5E5E;">#source("./R/utilities.R")</span></span>
+<span id="cb1-27"></span>
+<span id="cb1-28"><span class="fu" style="color: #4758AB;">options</span>(<span class="at" style="color: #657422;">dplyr.summarise.inform =</span> <span class="cn" style="color: #8f5902;">FALSE</span>)</span>
+<span id="cb1-29"></span>
+<span id="cb1-30"><span class="co" style="color: #5E5E5E;">#function</span></span>
+<span id="cb1-31">download_file <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="cf" style="color: #003B4F;">function</span>(url, filename) {</span>
+<span id="cb1-32">  <span class="fu" style="color: #4758AB;">download.file</span>(url, <span class="at" style="color: #657422;">destfile =</span> filename, <span class="at" style="color: #657422;">method =</span> <span class="st" style="color: #20794D;">"auto"</span>, <span class="at" style="color: #657422;">quiet =</span> <span class="cn" style="color: #8f5902;">FALSE</span>, <span class="at" style="color: #657422;">mode =</span> <span class="st" style="color: #20794D;">"wb"</span>)</span>
+<span id="cb1-33">}</span></code></pre></div>
+</details>
+</div>
+</section>
+</section>
+<section id="observation-data" class="level1">
+<h1>Observation Data</h1>
+<section id="flusurv" class="level2">
+<h2 class="anchored" data-anchor-id="flusurv">FluSurv</h2>
+<p>Build a flu hospitalization data file from individual state reports and all available years. The <em>hospitalizations()</em> function from the <strong>cdcfluview</strong> package does most of the work by querying <a href="https://gis.cdc.gov/GRASP/Fluview/FluHospRates.html">FluView</a>, but seems only to be able to take small bites at a time.</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1">myRegions <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">surveillance_areas</span>() </span>
+<span id="cb2-2"></span>
+<span id="cb2-3">flusurv_all <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">do.call</span>(rbind, <span class="fu" style="color: #4758AB;">lapply</span>(<span class="fu" style="color: #4758AB;">seq_len</span>(<span class="fu" style="color: #4758AB;">dim</span>(myRegions)[<span class="dv" style="color: #AD0000;">1</span>]), <span class="cf" style="color: #003B4F;">function</span>(i) {</span>
+<span id="cb2-4">  <span class="fu" style="color: #4758AB;">hospitalizations</span>(<span class="at" style="color: #657422;">surveillance_area =</span> myRegions<span class="sc" style="color: #5E5E5E;">$</span>surveillance_area[i], <span class="at" style="color: #657422;">region =</span> myRegions<span class="sc" style="color: #5E5E5E;">$</span>region[i])</span>
+<span id="cb2-5">}))</span></code></pre></div>
+</details>
+</div>
+<p>Wrangle Flusurv data:<br>
+Note that the <strong>cdcfluview</strong> package only includes through Spring of 2020. Because of this, the data is filtered at 2019 and a static file manually downloaded from FluView with more recnt reports (eventually this data will be moved to www.healthdata.gov).</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><span class="fu" style="color: #4758AB;">range</span>(flusurv_all<span class="sc" style="color: #5E5E5E;">$</span>year)</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2003 2020</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1">flusurv <span class="ot" style="color: #003B4F;">&lt;-</span> flusurv_all <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb5-2">  <span class="fu" style="color: #4758AB;">filter</span>(age_label <span class="sc" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">"Overall"</span>,</span>
+<span id="cb5-3">         region <span class="sc" style="color: #5E5E5E;">!=</span> <span class="st" style="color: #20794D;">"Entire Network"</span>,</span>
+<span id="cb5-4">         year <span class="sc" style="color: #5E5E5E;">&gt;=</span> <span class="dv" style="color: #AD0000;">2010</span> <span class="sc" style="color: #5E5E5E;">&amp;</span> year <span class="sc" style="color: #5E5E5E;">&lt;=</span> <span class="dv" style="color: #AD0000;">2019</span>) <span class="sc" style="color: #5E5E5E;">%&gt;%</span> <span class="co" style="color: #5E5E5E;">#the pkg fails on dates after 2020,ugh</span></span>
+<span id="cb5-5">  <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">location_name =</span> region,</span>
+<span id="cb5-6">         <span class="at" style="color: #657422;">network =</span> surveillance_area,</span>
+<span id="cb5-7">         <span class="at" style="color: #657422;">weeklyrate =</span> <span class="fu" style="color: #4758AB;">as.numeric</span>(weeklyrate),</span>
+<span id="cb5-8">         <span class="at" style="color: #657422;">epiweek =</span> year_wk_num) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb5-9">    <span class="fu" style="color: #4758AB;">select</span>(location_name, year, epiweek, network, rate, weeklyrate)</span>
+<span id="cb5-10">  </span>
+<span id="cb5-11"><span class="co" style="color: #5E5E5E;">#manual download from site 2023-06-01</span></span>
+<span id="cb5-12">flusurv_2020 <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">fread</span>(<span class="st" style="color: #20794D;">"D:/Github/flusion_model/data/FluSurveillance_2020.csv"</span>) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb5-13">  <span class="fu" style="color: #4758AB;">rename_all</span>(<span class="sc" style="color: #5E5E5E;">~</span><span class="fu" style="color: #4758AB;">gsub</span>(<span class="st" style="color: #20794D;">" |-"</span>, <span class="st" style="color: #20794D;">""</span>, .)) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb5-14">  <span class="fu" style="color: #4758AB;">filter</span>(AGECATEGORY <span class="sc" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">"Overall"</span>,</span>
+<span id="cb5-15">         SEXCATEGORY <span class="sc" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">"Overall"</span>,</span>
+<span id="cb5-16">         RACECATEGORY <span class="sc" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">"Overall"</span>,</span>
+<span id="cb5-17">         CATCHMENT <span class="sc" style="color: #5E5E5E;">!=</span> <span class="st" style="color: #20794D;">"Entire Network"</span>,</span>
+<span id="cb5-18">         MMWRYEAR <span class="sc" style="color: #5E5E5E;">&gt;=</span> <span class="dv" style="color: #AD0000;">2020</span>) <span class="sc" style="color: #5E5E5E;">%&gt;%</span> <span class="co" style="color: #5E5E5E;">#Prior to this date was downloaded in code above</span></span>
+<span id="cb5-19">  <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">location_name =</span> CATCHMENT,</span>
+<span id="cb5-20">         <span class="at" style="color: #657422;">network =</span> NETWORK,</span>
+<span id="cb5-21">         <span class="at" style="color: #657422;">year =</span> MMWRYEAR,</span>
+<span id="cb5-22">         <span class="at" style="color: #657422;">epiweek =</span> MMWRWEEK,</span>
+<span id="cb5-23">         <span class="at" style="color: #657422;">rate =</span> CUMULATIVERATE,</span>
+<span id="cb5-24">         <span class="at" style="color: #657422;">weeklyrate =</span> <span class="fu" style="color: #4758AB;">as.numeric</span>(WEEKLYRATE)) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb5-25">    <span class="fu" style="color: #4758AB;">select</span>(location_name, year, epiweek, network, rate, weeklyrate)</span>
+<span id="cb5-26"></span>
+<span id="cb5-27"><span class="co" style="color: #5E5E5E;">#Join date ranges and scale weeklyrate</span></span>
+<span id="cb5-28">flusurv <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">rbind</span>(flusurv, flusurv_2020)</span>
+<span id="cb5-29">flusurv<span class="sc" style="color: #5E5E5E;">$</span>weeklyrate.s <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">as.numeric</span>(<span class="fu" style="color: #4758AB;">scale</span>(flusurv<span class="sc" style="color: #5E5E5E;">$</span>weeklyrate, <span class="at" style="color: #657422;">scale =</span> T, <span class="at" style="color: #657422;">center=</span>T))</span>
+<span id="cb5-30"></span>
+<span id="cb5-31"><span class="co" style="color: #5E5E5E;">#combine NY data</span></span>
+<span id="cb5-32">flusurv<span class="sc" style="color: #5E5E5E;">$</span>location_name[flusurv<span class="sc" style="color: #5E5E5E;">$</span>location_name <span class="sc" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">"New York - Albany"</span>] <span class="ot" style="color: #003B4F;">=</span> <span class="st" style="color: #20794D;">"New York"</span></span>
+<span id="cb5-33">flusurv<span class="sc" style="color: #5E5E5E;">$</span>location_name[flusurv<span class="sc" style="color: #5E5E5E;">$</span>location_name <span class="sc" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">"New York - Rochester"</span>] <span class="ot" style="color: #003B4F;">=</span><span class="st" style="color: #20794D;">"New York"</span></span>
+<span id="cb5-34"></span>
+<span id="cb5-35">flusurv <span class="ot" style="color: #003B4F;">&lt;-</span> flusurv <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb5-36">  <span class="fu" style="color: #4758AB;">group_by</span>(location_name, year, epiweek) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb5-37">  <span class="fu" style="color: #4758AB;">summarise</span>(<span class="at" style="color: #657422;">rate =</span> <span class="fu" style="color: #4758AB;">mean</span>(rate, <span class="at" style="color: #657422;">na.rm=</span>T),</span>
+<span id="cb5-38">            <span class="at" style="color: #657422;">weeklyrate =</span> <span class="fu" style="color: #4758AB;">mean</span>(weeklyrate, <span class="at" style="color: #657422;">na.rm=</span>T),</span>
+<span id="cb5-39">            <span class="at" style="color: #657422;">weeklyrate.s =</span> <span class="fu" style="color: #4758AB;">mean</span>(weeklyrate.s, <span class="at" style="color: #657422;">na.rm=</span>T))</span>
+<span id="cb5-40"></span>
+<span id="cb5-41"></span>
+<span id="cb5-42"><span class="co" style="color: #5E5E5E;">#Check for duplicates</span></span>
+<span id="cb5-43"><span class="fu" style="color: #4758AB;">unique</span>(<span class="fu" style="color: #4758AB;">duplicated</span>(flusurv))</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><span class="fu" style="color: #4758AB;">dim</span>(flusurv)</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5676    6</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><span class="fu" style="color: #4758AB;">head</span>(flusurv)</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="table table-sm table-striped">
+<thead>
+<tr class="header">
+<th style="text-align: left;">location_name</th>
+<th style="text-align: right;">year</th>
+<th style="text-align: right;">epiweek</th>
+<th style="text-align: right;">rate</th>
+<th style="text-align: right;">weeklyrate</th>
+<th style="text-align: right;">weeklyrate.s</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">California</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">0.4</td>
+<td style="text-align: right;">-0.4771582</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">California</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;">-0.5561987</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">California</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;">-0.5561987</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">California</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;">-0.5561987</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">California</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;">-0.5561987</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">California</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">0.1</td>
+<td style="text-align: right;">-0.5957189</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>Same FluSurv process as above, but now for the Full Network reports</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1">flusurv_en <span class="ot" style="color: #003B4F;">&lt;-</span> flusurv_all <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb10-2">  <span class="fu" style="color: #4758AB;">filter</span>(age_label <span class="sc" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">"Overall"</span>,</span>
+<span id="cb10-3">         region <span class="sc" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">"Entire Network"</span>,</span>
+<span id="cb10-4">         year <span class="sc" style="color: #5E5E5E;">&gt;=</span> <span class="dv" style="color: #AD0000;">2010</span> <span class="sc" style="color: #5E5E5E;">&amp;</span> year <span class="sc" style="color: #5E5E5E;">&lt;=</span> <span class="dv" style="color: #AD0000;">2019</span>) <span class="sc" style="color: #5E5E5E;">%&gt;%</span> <span class="co" style="color: #5E5E5E;">#the pkg fails on dates after 2020,ugh</span></span>
+<span id="cb10-5">  <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">location_name =</span> region,</span>
+<span id="cb10-6">         <span class="at" style="color: #657422;">network =</span> surveillance_area,</span>
+<span id="cb10-7">         <span class="at" style="color: #657422;">epiweek =</span> year_wk_num) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb10-8">    <span class="fu" style="color: #4758AB;">select</span>(location_name, year, epiweek, network, rate, weeklyrate)</span>
+<span id="cb10-9"></span>
+<span id="cb10-10">flusurv_en2020 <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">fread</span>(<span class="st" style="color: #20794D;">"D:/Github/flusion_model/data/FluSurveillance_2020.csv"</span>) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb10-11">  <span class="fu" style="color: #4758AB;">rename_all</span>(<span class="sc" style="color: #5E5E5E;">~</span><span class="fu" style="color: #4758AB;">gsub</span>(<span class="st" style="color: #20794D;">" |-"</span>, <span class="st" style="color: #20794D;">""</span>, .)) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb10-12">  <span class="fu" style="color: #4758AB;">filter</span>(AGECATEGORY <span class="sc" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">"Overall"</span>,</span>
+<span id="cb10-13">         SEXCATEGORY <span class="sc" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">"Overall"</span>,</span>
+<span id="cb10-14">         RACECATEGORY <span class="sc" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">"Overall"</span>,</span>
+<span id="cb10-15">         CATCHMENT <span class="sc" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">"Entire Network"</span>,</span>
+<span id="cb10-16">         MMWRYEAR <span class="sc" style="color: #5E5E5E;">&gt;=</span> <span class="dv" style="color: #AD0000;">2020</span>) <span class="sc" style="color: #5E5E5E;">%&gt;%</span> <span class="co" style="color: #5E5E5E;">#the pkg fails on dates after 2020,ugh</span></span>
+<span id="cb10-17">  <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">location_name =</span> CATCHMENT,</span>
+<span id="cb10-18">         <span class="at" style="color: #657422;">network =</span> NETWORK,</span>
+<span id="cb10-19">         <span class="at" style="color: #657422;">year =</span> MMWRYEAR,</span>
+<span id="cb10-20">         <span class="at" style="color: #657422;">epiweek =</span> MMWRWEEK,</span>
+<span id="cb10-21">         <span class="at" style="color: #657422;">rate =</span> CUMULATIVERATE,</span>
+<span id="cb10-22">         <span class="at" style="color: #657422;">weeklyrate =</span> WEEKLYRATE) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb10-23">    <span class="fu" style="color: #4758AB;">select</span>(location_name, year, epiweek, network, rate, weeklyrate)</span>
+<span id="cb10-24"></span>
+<span id="cb10-25"><span class="co" style="color: #5E5E5E;">#Join</span></span>
+<span id="cb10-26">flusurv_en <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">rbind</span>(flusurv_en, flusurv_en2020)</span>
+<span id="cb10-27"><span class="fu" style="color: #4758AB;">unique</span>(<span class="fu" style="color: #4758AB;">duplicated</span>(flusurv_en))</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><span class="fu" style="color: #4758AB;">dim</span>(flusurv_en)</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1131    6</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><span class="fu" style="color: #4758AB;">head</span>(flusurv_en)</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="table table-sm table-striped">
+<thead>
+<tr class="header">
+<th style="text-align: left;">location_name</th>
+<th style="text-align: right;">year</th>
+<th style="text-align: right;">epiweek</th>
+<th style="text-align: left;">network</th>
+<th style="text-align: left;">rate</th>
+<th style="text-align: left;">weeklyrate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Entire Network</td>
+<td style="text-align: right;">2016</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: left;">FluSurv-NET</td>
+<td style="text-align: left;">0.1</td>
+<td style="text-align: left;">0.1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Entire Network</td>
+<td style="text-align: right;">2016</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: left;">FluSurv-NET</td>
+<td style="text-align: left;">0.2</td>
+<td style="text-align: left;">0.1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Entire Network</td>
+<td style="text-align: right;">2016</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: left;">FluSurv-NET</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Entire Network</td>
+<td style="text-align: right;">2016</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: left;">FluSurv-NET</td>
+<td style="text-align: left;">0.4</td>
+<td style="text-align: left;">0.1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Entire Network</td>
+<td style="text-align: right;">2016</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: left;">FluSurv-NET</td>
+<td style="text-align: left;">0.6</td>
+<td style="text-align: left;">0.1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Entire Network</td>
+<td style="text-align: right;">2016</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: left;">FluSurv-NET</td>
+<td style="text-align: left;">0.8</td>
+<td style="text-align: left;">0.2</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</section>
+<section id="ilinet-surveillance-data" class="level2">
+<h2 class="anchored" data-anchor-id="ilinet-surveillance-data">ILINet Surveillance Data</h2>
+<p>Influenza Like Illness (ILI) data using <strong>cdcfluview</strong> package. Unlike FluSurv, data is available 2010-2013.</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1">ilinet <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">ilinet</span>(<span class="at" style="color: #657422;">region =</span> <span class="st" style="color: #20794D;">"state"</span>) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb15-2">  <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">location_name =</span> region,</span>
+<span id="cb15-3">         <span class="at" style="color: #657422;">epiweek =</span> week,</span>
+<span id="cb15-4">         <span class="at" style="color: #657422;">unweighted =</span> <span class="fu" style="color: #4758AB;">as.numeric</span>(unweighted_ili),</span>
+<span id="cb15-5">         <span class="at" style="color: #657422;">unweighted.s =</span> unweighted,</span>
+<span id="cb15-6">         <span class="at" style="color: #657422;">total =</span> ilitotal,</span>
+<span id="cb15-7">         <span class="at" style="color: #657422;">providers =</span> num_of_providers) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb15-8">  <span class="fu" style="color: #4758AB;">select</span>(location_name, year, epiweek, unweighted, unweighted.s, total, providers)</span>
+<span id="cb15-9"></span>
+<span id="cb15-10"><span class="co" style="color: #5E5E5E;"># Clip to between 0.0001 and 99.999</span></span>
+<span id="cb15-11">ilinet<span class="sc" style="color: #5E5E5E;">$</span>unweighted.s <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">pmin</span>(<span class="fu" style="color: #4758AB;">pmax</span>(<span class="fu" style="color: #4758AB;">as.numeric</span>(ilinet<span class="sc" style="color: #5E5E5E;">$</span>unweighted.s), <span class="fl" style="color: #AD0000;">0.0001</span>), <span class="fl" style="color: #AD0000;">99.9999</span>)<span class="sc" style="color: #5E5E5E;">/</span><span class="dv" style="color: #AD0000;">100</span></span>
+<span id="cb15-12"></span>
+<span id="cb15-13"><span class="co" style="color: #5E5E5E;"># logit transform </span></span>
+<span id="cb15-14">ilinet<span class="sc" style="color: #5E5E5E;">$</span>unweighted.s <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">log</span>(ilinet<span class="sc" style="color: #5E5E5E;">$</span>unweighted.s<span class="sc" style="color: #5E5E5E;">/</span>(<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">-</span>ilinet<span class="sc" style="color: #5E5E5E;">$</span>unweighted.s))</span>
+<span id="cb15-15"><span class="fu" style="color: #4758AB;">range</span>(ilinet<span class="sc" style="color: #5E5E5E;">$</span>unweighted.s, <span class="at" style="color: #657422;">na.rm=</span>T)</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] -13.815510  -1.423094</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><span class="fu" style="color: #4758AB;">unique</span>(<span class="fu" style="color: #4758AB;">duplicated</span>(ilinet))</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><span class="fu" style="color: #4758AB;">dim</span>(ilinet)</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 35623     7</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><span class="fu" style="color: #4758AB;">range</span>(ilinet<span class="sc" style="color: #5E5E5E;">$</span>year)</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2010 2023</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><span class="fu" style="color: #4758AB;">head</span>(ilinet)</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="table table-sm table-striped">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 7%">
+<col style="width: 11%">
+<col style="width: 16%">
+<col style="width: 19%">
+<col style="width: 8%">
+<col style="width: 14%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">location_name</th>
+<th style="text-align: right;">year</th>
+<th style="text-align: right;">epiweek</th>
+<th style="text-align: right;">unweighted</th>
+<th style="text-align: right;">unweighted.s</th>
+<th style="text-align: right;">total</th>
+<th style="text-align: right;">providers</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Alabama</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">2.134770</td>
+<td style="text-align: right;">-3.825232</td>
+<td style="text-align: right;">249</td>
+<td style="text-align: right;">35</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Alaska</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">0.875146</td>
+<td style="text-align: right;">-4.729745</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">7</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Arizona</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">0.674721</td>
+<td style="text-align: right;">-4.991856</td>
+<td style="text-align: right;">172</td>
+<td style="text-align: right;">49</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Arkansas</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">0.696056</td>
+<td style="text-align: right;">-4.960510</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">15</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">California</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">1.954120</td>
+<td style="text-align: right;">-3.915496</td>
+<td style="text-align: right;">632</td>
+<td style="text-align: right;">112</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Colorado</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">0.660684</td>
+<td style="text-align: right;">-5.013021</td>
+<td style="text-align: right;">134</td>
+<td style="text-align: right;">14</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</section>
+<section id="covid19-rpihc-by-state-timeseries-raw" class="level2">
+<h2 class="anchored" data-anchor-id="covid19-rpihc-by-state-timeseries-raw">COVID19 RPIHC by State Timeseries (raw)</h2>
+<p>Downloading the COVID-19 Reported Patient Impact and Hospital Capacity by State Timeseries from https://healthdata.gov/.</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1">url <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="st" style="color: #20794D;">"https://healthdata.gov/api/views/g62h-syeh/rows.csv?accessType=DOWNLOAD"</span></span>
+<span id="cb24-2">filename <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="st" style="color: #20794D;">"D:/Github/flusion_model/data/flu_HHS.csv"</span></span>
+<span id="cb24-3"></span>
+<span id="cb24-4"><span class="fu" style="color: #4758AB;">download_file</span>(url, filename)</span></code></pre></div>
+</details>
+</div>
+<p>Read and wrangle RPIHC:</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1">flu_HHS <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">fread</span>(<span class="st" style="color: #20794D;">"D:/Github/flusion_model/data/flu_HHS.csv"</span>) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb25-2">  <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">abbreviation =</span> state,</span>
+<span id="cb25-3">         <span class="at" style="color: #657422;">date =</span> <span class="fu" style="color: #4758AB;">as_date</span>(date) <span class="sc" style="color: #5E5E5E;">-</span> <span class="dv" style="color: #AD0000;">1</span>, <span class="co" style="color: #5E5E5E;">#1-day prior, per fluSight truth</span></span>
+<span id="cb25-4">         <span class="at" style="color: #657422;">year =</span> <span class="fu" style="color: #4758AB;">year</span>(date),</span>
+<span id="cb25-5">         <span class="at" style="color: #657422;">epiweek =</span> <span class="fu" style="color: #4758AB;">epiweek</span>(date)) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb25-6">  <span class="fu" style="color: #4758AB;">group_by</span>(abbreviation, year, epiweek) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb25-7">  <span class="fu" style="color: #4758AB;">summarise</span>(<span class="at" style="color: #657422;">hosp_inc =</span> <span class="fu" style="color: #4758AB;">sum</span>(previous_day_admission_influenza_confirmed))</span>
+<span id="cb25-8"></span>
+<span id="cb25-9"><span class="fu" style="color: #4758AB;">unique</span>(<span class="fu" style="color: #4758AB;">duplicated</span>(flu_HHS))</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><span class="fu" style="color: #4758AB;">dim</span>(flu_HHS)</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 9293    4</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><span class="fu" style="color: #4758AB;">range</span>(flu_HHS<span class="sc" style="color: #5E5E5E;">$</span>year)</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2019 2023</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><span class="fu" style="color: #4758AB;">head</span>(flu_HHS)</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="table table-sm table-striped">
+<thead>
+<tr class="header">
+<th style="text-align: left;">abbreviation</th>
+<th style="text-align: right;">year</th>
+<th style="text-align: right;">epiweek</th>
+<th style="text-align: right;">hosp_inc</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">AK</td>
+<td style="text-align: right;">2020</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AK</td>
+<td style="text-align: right;">2020</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AK</td>
+<td style="text-align: right;">2020</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AK</td>
+<td style="text-align: right;">2020</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AK</td>
+<td style="text-align: right;">2020</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AK</td>
+<td style="text-align: right;">2020</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">NA</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</section>
+<section id="nrevss" class="level2">
+<h2 class="anchored" data-anchor-id="nrevss">NREVSS</h2>
+<p>National Respiratory and Enteric Virus Surveillance System.</p>
+<p>Again, unfortunately only available through a manual: https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html<br>
+Files illustrated here were downloaded on June 2, 2023.</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb32" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1">nrevss<span class="fl" style="color: #AD0000;">.1</span> <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">fread</span>(<span class="st" style="color: #20794D;">"D:/Github/flusion_model/data/WHO_NREVSS_Combined_prior_to_2015_16.csv"</span>) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb32-2">  <span class="fu" style="color: #4758AB;">rename_all</span>(<span class="sc" style="color: #5E5E5E;">~</span><span class="fu" style="color: #4758AB;">gsub</span>(<span class="st" style="color: #20794D;">" |-"</span>, <span class="st" style="color: #20794D;">""</span>, .)) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb32-3">  <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">location_name =</span> REGION,</span>
+<span id="cb32-4">         <span class="at" style="color: #657422;">year =</span> YEAR,</span>
+<span id="cb32-5">         <span class="at" style="color: #657422;">epiweek =</span> WEEK,</span>
+<span id="cb32-6">         <span class="at" style="color: #657422;">tot_perc =</span> <span class="fu" style="color: #4758AB;">as.numeric</span>(PERCENTPOSITIVE),</span>
+<span id="cb32-7">         <span class="at" style="color: #657422;">Bpos =</span> <span class="fu" style="color: #4758AB;">as.numeric</span>(B),</span>
+<span id="cb32-8">         <span class="at" style="color: #657422;">tot_samp =</span> <span class="fu" style="color: #4758AB;">as.numeric</span>(TOTALSPECIMENS),</span>
+<span id="cb32-9">         <span class="at" style="color: #657422;">Apos =</span> tot_perc <span class="sc" style="color: #5E5E5E;">-</span> ((Bpos<span class="sc" style="color: #5E5E5E;">/</span>tot_samp)<span class="sc" style="color: #5E5E5E;">*</span><span class="dv" style="color: #AD0000;">100</span>)) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb32-10">  <span class="fu" style="color: #4758AB;">select</span>(location_name, year, epiweek, Apos)</span>
+<span id="cb32-11"></span>
+<span id="cb32-12"></span>
+<span id="cb32-13">nrevss<span class="fl" style="color: #AD0000;">.2</span> <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">fread</span>(<span class="st" style="color: #20794D;">"D:/Github/flusion_model/data/WHO_NREVSS_Clinical_Labs.csv"</span>) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb32-14">  <span class="fu" style="color: #4758AB;">rename_all</span>(<span class="sc" style="color: #5E5E5E;">~</span><span class="fu" style="color: #4758AB;">gsub</span>(<span class="st" style="color: #20794D;">" |-"</span>, <span class="st" style="color: #20794D;">""</span>, .)) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb32-15">  <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">location_name =</span> REGION,</span>
+<span id="cb32-16">         <span class="at" style="color: #657422;">year =</span> YEAR,</span>
+<span id="cb32-17">         <span class="at" style="color: #657422;">epiweek =</span> WEEK,</span>
+<span id="cb32-18">         <span class="at" style="color: #657422;">Apos =</span> PERCENTA) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb32-19">  <span class="fu" style="color: #4758AB;">select</span>(location_name, year, epiweek, Apos) <span class="co" style="color: #5E5E5E;">#Apos = Influenza A positive</span></span>
+<span id="cb32-20"></span>
+<span id="cb32-21"><span class="co" style="color: #5E5E5E;"># Combine </span></span>
+<span id="cb32-22">nrevss <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">rbind</span>(nrevss<span class="fl" style="color: #AD0000;">.1</span>, nrevss<span class="fl" style="color: #AD0000;">.2</span>)</span>
+<span id="cb32-23"></span>
+<span id="cb32-24"><span class="co" style="color: #5E5E5E;"># Replace "X" </span></span>
+<span id="cb32-25">nrevss<span class="sc" style="color: #5E5E5E;">$</span>Apos[nrevss<span class="sc" style="color: #5E5E5E;">$</span>Apos <span class="sc" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">"X"</span>] <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="cn" style="color: #8f5902;">NA</span></span>
+<span id="cb32-26"></span>
+<span id="cb32-27"><span class="co" style="color: #5E5E5E;"># Clip to between 0.0001 and 99.999</span></span>
+<span id="cb32-28">nrevss<span class="sc" style="color: #5E5E5E;">$</span>Apos <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">pmin</span>(<span class="fu" style="color: #4758AB;">pmax</span>(<span class="fu" style="color: #4758AB;">as.numeric</span>(nrevss<span class="sc" style="color: #5E5E5E;">$</span>Apos), <span class="fl" style="color: #AD0000;">0.0001</span>), <span class="fl" style="color: #AD0000;">99.9999</span>)<span class="sc" style="color: #5E5E5E;">/</span><span class="dv" style="color: #AD0000;">100</span></span>
+<span id="cb32-29"></span>
+<span id="cb32-30"><span class="co" style="color: #5E5E5E;"># logit transform </span></span>
+<span id="cb32-31">nrevss<span class="sc" style="color: #5E5E5E;">$</span>Apos.s <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">log</span>(nrevss<span class="sc" style="color: #5E5E5E;">$</span>Apos<span class="sc" style="color: #5E5E5E;">/</span>(<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">-</span>nrevss<span class="sc" style="color: #5E5E5E;">$</span>Apos))</span>
+<span id="cb32-32"><span class="fu" style="color: #4758AB;">unique</span>(<span class="fu" style="color: #4758AB;">duplicated</span>(nrevss))</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb34" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><span class="fu" style="color: #4758AB;">head</span>(nrevss)</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="table table-sm table-striped">
+<thead>
+<tr class="header">
+<th style="text-align: left;">location_name</th>
+<th style="text-align: right;">year</th>
+<th style="text-align: right;">epiweek</th>
+<th style="text-align: right;">Apos</th>
+<th style="text-align: right;">Apos.s</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Alabama</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">0.0000010</td>
+<td style="text-align: right;">-13.815510</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Alaska</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">0.0000010</td>
+<td style="text-align: right;">-13.815510</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Arizona</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">0.0250000</td>
+<td style="text-align: right;">-3.663562</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Arkansas</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">0.0000010</td>
+<td style="text-align: right;">-13.815510</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">California</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">0.0273355</td>
+<td style="text-align: right;">-3.571852</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Colorado</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">0.0079000</td>
+<td style="text-align: right;">-4.832961</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="location-template" class="level1">
+<h1>Location Template</h1>
+<section id="location-table" class="level2">
+<h2 class="anchored" data-anchor-id="location-table">Location Table</h2>
+<p>Location codes and population numbers from FluSight. Should really get varying census over time period, but these are a start.</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb35" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1">url <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="st" style="color: #20794D;">"https://github.com/cdcepi/Flusight-forecast-data/raw/master/data-locations/locations.csv"</span></span>
+<span id="cb35-2">filename <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="st" style="color: #20794D;">"D:/Github/flusion_model/data/locations.csv"</span></span>
+<span id="cb35-3"></span>
+<span id="cb35-4"><span class="fu" style="color: #4758AB;">download_file</span>(url, filename)</span></code></pre></div>
+</details>
+</div>
+<p>Read locations:</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb36" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1">locations <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">fread</span>(<span class="st" style="color: #20794D;">"D:/Github/flusion_model/data/locations.csv"</span>) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb36-2">  <span class="fu" style="color: #4758AB;">select</span>(<span class="sc" style="color: #5E5E5E;">-</span><span class="fu" style="color: #4758AB;">c</span>(count_rate1per100k, count_rate2per100k)) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb36-3">  <span class="fu" style="color: #4758AB;">filter</span>(location_name <span class="sc" style="color: #5E5E5E;">!=</span> <span class="st" style="color: #20794D;">"US"</span>) <span class="co" style="color: #5E5E5E;">#remove aggregate group</span></span>
+<span id="cb36-4"></span>
+<span id="cb36-5"><span class="fu" style="color: #4758AB;">head</span>(locations)</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="table table-sm table-striped">
+<thead>
+<tr class="header">
+<th style="text-align: left;">abbreviation</th>
+<th style="text-align: left;">location</th>
+<th style="text-align: left;">location_name</th>
+<th style="text-align: right;">population</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">AL</td>
+<td style="text-align: left;">01</td>
+<td style="text-align: left;">Alabama</td>
+<td style="text-align: right;">5039877</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AK</td>
+<td style="text-align: left;">02</td>
+<td style="text-align: left;">Alaska</td>
+<td style="text-align: right;">732673</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AZ</td>
+<td style="text-align: left;">04</td>
+<td style="text-align: left;">Arizona</td>
+<td style="text-align: right;">7276316</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AR</td>
+<td style="text-align: left;">05</td>
+<td style="text-align: left;">Arkansas</td>
+<td style="text-align: right;">3025891</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CA</td>
+<td style="text-align: left;">06</td>
+<td style="text-align: left;">California</td>
+<td style="text-align: right;">39237836</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CO</td>
+<td style="text-align: left;">08</td>
+<td style="text-align: left;">Colorado</td>
+<td style="text-align: right;">5812069</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="template" class="level1">
+<h1>Template</h1>
+<p>Ensure all locations and times are represented in the analysis. Missing data are plugged with NA.</p>
+<section id="dates-and-locations" class="level2">
+<h2 class="anchored" data-anchor-id="dates-and-locations">Dates and Locations</h2>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1">myYears <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">seq</span>(<span class="dv" style="color: #AD0000;">2010</span>, <span class="dv" style="color: #AD0000;">2023</span>, <span class="at" style="color: #657422;">by =</span> <span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb37-2">week_nums <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span><span class="dv" style="color: #AD0000;">52</span></span>
+<span id="cb37-3"></span>
+<span id="cb37-4">year_set <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">lapply</span>(myYears, <span class="cf" style="color: #003B4F;">function</span>(year) {</span>
+<span id="cb37-5">  tmp_frame <span class="ot" style="color: #003B4F;">&lt;-</span> locations <span class="sc" style="color: #5E5E5E;">%&gt;%</span> <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">year =</span> year)</span>
+<span id="cb37-6">  </span>
+<span id="cb37-7">  weekly_set <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">lapply</span>(week_nums, <span class="cf" style="color: #003B4F;">function</span>(week_num) {</span>
+<span id="cb37-8">    tmp_frame_wk <span class="ot" style="color: #003B4F;">&lt;-</span> tmp_frame <span class="sc" style="color: #5E5E5E;">%&gt;%</span> <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">epiweek =</span> week_num)</span>
+<span id="cb37-9">    <span class="fu" style="color: #4758AB;">return</span>(tmp_frame_wk)</span>
+<span id="cb37-10">  })</span>
+<span id="cb37-11">  </span>
+<span id="cb37-12">  weekly_set <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">do.call</span>(rbind, weekly_set)</span>
+<span id="cb37-13">  <span class="fu" style="color: #4758AB;">return</span>(weekly_set)</span>
+<span id="cb37-14">})</span>
+<span id="cb37-15"></span>
+<span id="cb37-16">template <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">do.call</span>(rbind, year_set)</span>
+<span id="cb37-17"></span>
+<span id="cb37-18"><span class="fu" style="color: #4758AB;">dim</span>(template)</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 38584     6</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb39" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><span class="fu" style="color: #4758AB;">head</span>(template) <span class="co" style="color: #5E5E5E;">#all states and times represented</span></span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="table table-sm table-striped">
+<thead>
+<tr class="header">
+<th style="text-align: left;">abbreviation</th>
+<th style="text-align: left;">location</th>
+<th style="text-align: left;">location_name</th>
+<th style="text-align: right;">population</th>
+<th style="text-align: right;">year</th>
+<th style="text-align: right;">epiweek</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">AL</td>
+<td style="text-align: left;">01</td>
+<td style="text-align: left;">Alabama</td>
+<td style="text-align: right;">5039877</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AK</td>
+<td style="text-align: left;">02</td>
+<td style="text-align: left;">Alaska</td>
+<td style="text-align: right;">732673</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AZ</td>
+<td style="text-align: left;">04</td>
+<td style="text-align: left;">Arizona</td>
+<td style="text-align: right;">7276316</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AR</td>
+<td style="text-align: left;">05</td>
+<td style="text-align: left;">Arkansas</td>
+<td style="text-align: right;">3025891</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CA</td>
+<td style="text-align: left;">06</td>
+<td style="text-align: left;">California</td>
+<td style="text-align: right;">39237836</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CO</td>
+<td style="text-align: left;">08</td>
+<td style="text-align: left;">Colorado</td>
+<td style="text-align: right;">5812069</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb40" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><span class="co" style="color: #5E5E5E;">#most_recent &lt;- max(subset(flu_HHS, year == 2023)$epiweek) #drop future dates</span></span>
+<span id="cb40-2">most_recent <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="dv" style="color: #AD0000;">22</span> <span class="co" style="color: #5E5E5E;">#models were initiall fit with 2023-Epiweek-22</span></span>
+<span id="cb40-3">template<span class="sc" style="color: #5E5E5E;">$</span>keep <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">ifelse</span>(template<span class="sc" style="color: #5E5E5E;">$</span>year <span class="sc" style="color: #5E5E5E;">==</span> <span class="dv" style="color: #AD0000;">2023</span> <span class="sc" style="color: #5E5E5E;">&amp;</span> template<span class="sc" style="color: #5E5E5E;">$</span>epiweek <span class="sc" style="color: #5E5E5E;">&gt;</span> most_recent, <span class="st" style="color: #20794D;">"drop"</span>, <span class="st" style="color: #20794D;">"keep"</span>)</span>
+<span id="cb40-4"></span>
+<span id="cb40-5">template <span class="ot" style="color: #003B4F;">&lt;-</span> template <span class="sc" style="color: #5E5E5E;">%&gt;%</span> </span>
+<span id="cb40-6">  <span class="fu" style="color: #4758AB;">filter</span>(keep <span class="sc" style="color: #5E5E5E;">==</span> <span class="st" style="color: #20794D;">"keep"</span>) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb40-7">  <span class="fu" style="color: #4758AB;">select</span>(<span class="sc" style="color: #5E5E5E;">-</span>keep)</span>
+<span id="cb40-8"></span>
+<span id="cb40-9"><span class="fu" style="color: #4758AB;">unique</span>(<span class="fu" style="color: #4758AB;">duplicated</span>(template))</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE</code></pre>
+</div>
+</div>
+</section>
+<section id="reduce-for-testing" class="level2">
+<h2 class="anchored" data-anchor-id="reduce-for-testing">Reduce for Testing</h2>
+<p>Running the analysis from 2010 through 2023-Epiweek-22.</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb42" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1">template <span class="ot" style="color: #003B4F;">&lt;-</span> template <span class="sc" style="color: #5E5E5E;">%&gt;%</span> <span class="fu" style="color: #4758AB;">filter</span>(year <span class="sc" style="color: #5E5E5E;">&gt;=</span> <span class="dv" style="color: #AD0000;">2010</span>)</span></code></pre></div>
+</details>
+</div>
+</section>
+<section id="time-steps" class="level2">
+<h2 class="anchored" data-anchor-id="time-steps">Time Steps</h2>
+<p>An index with sequential timesteps.</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb43" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1">template <span class="ot" style="color: #003B4F;">&lt;-</span> template <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb43-2">  <span class="fu" style="color: #4758AB;">arrange</span>(year, epiweek) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb43-3">  <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">ts_week =</span> <span class="fu" style="color: #4758AB;">as.integer</span>(<span class="fu" style="color: #4758AB;">as.factor</span>(year <span class="sc" style="color: #5E5E5E;">+</span> (epiweek<span class="sc" style="color: #5E5E5E;">/</span><span class="dv" style="color: #AD0000;">53</span>))))</span>
+<span id="cb43-4"></span>
+<span id="cb43-5"></span>
+<span id="cb43-6"><span class="fu" style="color: #4758AB;">range</span>(template<span class="sc" style="color: #5E5E5E;">$</span>ts_week) <span class="co" style="color: #5E5E5E;">#number of epiweeks</span></span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1]   1 698</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="spatial-domian" class="level1">
+<h1>Spatial Domian</h1>
+<p>Need to setup directories to use <strong>CovidCAR</strong> functions. Values here are arbitrary (need to add option to bypass to CovidCAR)</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb45" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><span class="fu" style="color: #4758AB;">setup_analysis</span>(<span class="at" style="color: #657422;">report_date =</span> <span class="st" style="color: #20794D;">"2010-01-01"</span>, </span>
+<span id="cb45-2">               <span class="at" style="color: #657422;">training_period =</span> <span class="dv" style="color: #AD0000;">2</span><span class="sc" style="color: #5E5E5E;">*</span><span class="dv" style="color: #AD0000;">28</span>, <span class="co" style="color: #5E5E5E;">#days</span></span>
+<span id="cb45-3">               <span class="at" style="color: #657422;">forecast_horizon =</span> <span class="dv" style="color: #AD0000;">28</span>, <span class="co" style="color: #5E5E5E;">#days</span></span>
+<span id="cb45-4">               <span class="at" style="color: #657422;">output_dir =</span> <span class="st" style="color: #20794D;">"D:/Github/flusion_model/data"</span></span>
+<span id="cb45-5">)</span></code></pre></div>
+</details>
+</div>
+<section id="get-geographic-boundaries" class="level2">
+<h2 class="anchored" data-anchor-id="get-geographic-boundaries">Get Geographic Boundaries</h2>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb46" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1">States <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">download_boundaries</span>(<span class="at" style="color: #657422;">unit =</span> <span class="st" style="color: #20794D;">"state"</span>)</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `us-state-boundaries' from data source 
+  `D:\Github\flusion_model\data\2010-01-01-CovidCAR-run2023-06-08\polygons' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 56 features and 20 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: -179.2311 ymin: -14.60181 xmax: 179.8597 ymax: 71.44069
+Geodetic CRS:  WGS 84</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb48" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><span class="fu" style="color: #4758AB;">class</span>(States)</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "SpatialPolygonsDataFrame"
+attr(,"package")
+[1] "sp"</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><span class="fu" style="color: #4758AB;">head</span>(States<span class="sc" style="color: #5E5E5E;">@</span>data[,<span class="fu" style="color: #4758AB;">c</span>(<span class="st" style="color: #20794D;">"Region"</span>, <span class="st" style="color: #20794D;">"State"</span>)]) <span class="co" style="color: #5E5E5E;">#appended attributes  </span></span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="table table-sm table-striped">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Region</th>
+<th style="text-align: left;">State</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">Virgin Islands</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">Wisconsin</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">Vermont</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">New Jersey</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: left;">Colorado</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6</td>
+<td style="text-align: left;">South Carolina</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</section>
+<section id="adjacency" class="level2">
+<h2 class="anchored" data-anchor-id="adjacency">Adjacency</h2>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb51" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1">nb_flusion <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">get_neighbors</span>(States, <span class="at" style="color: #657422;">connect=</span><span class="cn" style="color: #8f5902;">TRUE</span>)</span>
+<span id="cb51-2"><span class="fu" style="color: #4758AB;">summary</span>(nb_flusion)</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Neighbour list object:
+Number of regions: 56 
+Number of nonzero links: 242 
+Percentage nonzero weights: 7.716837 
+Average number of links: 4.321429 
+Link number distribution:
+
+ 1  2  3  4  5  6  7  8 
+ 5  3 10 12 10 11  3  2 
+5 least connected regions:
+1 13 38 42 54 with 1 link
+2 most connected regions:
+49 56 with 8 links</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb53" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><span class="co" style="color: #5E5E5E;">#view</span></span>
+<span id="cb53-2"><span class="fu" style="color: #4758AB;">plot_neighbors</span>(States, nb_flusion)</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="https://jmhumphreys.github.io/flusion_model/construction/preprocessing/preprocessing_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="768"></p>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb54" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><span class="co" style="color: #5E5E5E;">#convert to matrix</span></span>
+<span id="cb54-2"><span class="fu" style="color: #4758AB;">nb2INLA</span>(<span class="st" style="color: #20794D;">"J"</span>, nb_flusion)</span>
+<span id="cb54-3">J <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">inla.read.graph</span>(<span class="st" style="color: #20794D;">"J"</span>)</span></code></pre></div>
+</details>
+</div>
+</section>
+<section id="template-spatial-index" class="level2">
+<h2 class="anchored" data-anchor-id="template-spatial-index">Template Spatial Index</h2>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb55" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1">template<span class="sc" style="color: #5E5E5E;">$</span>Region <span class="ot" style="color: #003B4F;">=</span>  <span class="fu" style="color: #4758AB;">with</span>(States<span class="sc" style="color: #5E5E5E;">@</span>data[,<span class="fu" style="color: #4758AB;">c</span>(<span class="st" style="color: #20794D;">"Region"</span>, <span class="st" style="color: #20794D;">"State"</span>)],</span>
+<span id="cb55-2">                       Region[<span class="fu" style="color: #4758AB;">match</span>(</span>
+<span id="cb55-3">                        template<span class="sc" style="color: #5E5E5E;">$</span>location_name,</span>
+<span id="cb55-4">                                 State)])</span></code></pre></div>
+</details>
+</div>
+</section>
+<section id="add-entire-network" class="level2">
+<h2 class="anchored" data-anchor-id="add-entire-network">Add Entire Network</h2>
+<p>Getting the flue weeklyrate from FluSurv. Not that this is only the time trend from FluSurv and is not loaction specific.</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb56" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1">en_match <span class="ot" style="color: #003B4F;">&lt;-</span> flusurv_en <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb56-2">  <span class="fu" style="color: #4758AB;">group_by</span>(year, epiweek) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb56-3">  <span class="fu" style="color: #4758AB;">summarise</span>(<span class="at" style="color: #657422;">en_est =</span> <span class="fu" style="color: #4758AB;">mean</span>(<span class="fu" style="color: #4758AB;">as.numeric</span>(weeklyrate), <span class="at" style="color: #657422;">na.rm=</span><span class="cn" style="color: #8f5902;">TRUE</span>)) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb56-4">  <span class="fu" style="color: #4758AB;">select</span>(year, epiweek, en_est)</span>
+<span id="cb56-5"></span>
+<span id="cb56-6"><span class="co" style="color: #5E5E5E;"># Clip to between 0.0001 and 99.999</span></span>
+<span id="cb56-7">en_match<span class="sc" style="color: #5E5E5E;">$</span>en_est.s <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">pmin</span>(<span class="fu" style="color: #4758AB;">pmax</span>(<span class="fu" style="color: #4758AB;">as.numeric</span>(en_match<span class="sc" style="color: #5E5E5E;">$</span>en_est), <span class="fl" style="color: #AD0000;">0.0001</span>), <span class="fl" style="color: #AD0000;">99.9999</span>)<span class="sc" style="color: #5E5E5E;">/</span><span class="dv" style="color: #AD0000;">100</span></span>
+<span id="cb56-8"></span>
+<span id="cb56-9"><span class="co" style="color: #5E5E5E;"># logit transform </span></span>
+<span id="cb56-10">en_match<span class="sc" style="color: #5E5E5E;">$</span>en_est.s <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">round</span>(<span class="fu" style="color: #4758AB;">log</span>(en_match<span class="sc" style="color: #5E5E5E;">$</span>en_est.s<span class="sc" style="color: #5E5E5E;">/</span>(<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">-</span>en_match<span class="sc" style="color: #5E5E5E;">$</span>en_est.s)), <span class="dv" style="color: #AD0000;">3</span>)</span>
+<span id="cb56-11"><span class="fu" style="color: #4758AB;">range</span>(en_match<span class="sc" style="color: #5E5E5E;">$</span>en_est.s, <span class="at" style="color: #657422;">na.rm=</span>T)</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] -13.816  -2.190</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb58" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1">template <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">left_join</span>(template, en_match, <span class="at" style="color: #657422;">by =</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="st" style="color: #20794D;">"year"</span>, <span class="st" style="color: #20794D;">"epiweek"</span>))</span>
+<span id="cb58-2"><span class="fu" style="color: #4758AB;">unique</span>(<span class="fu" style="color: #4758AB;">duplicated</span>(template))</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE</code></pre>
+</div>
+</div>
+</section>
+<section id="space-time-interaction-index" class="level2">
+<h2 class="anchored" data-anchor-id="space-time-interaction-index">Space-Time Interaction Index</h2>
+<p>May not be used, but including with Template just in case.</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb60" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1">template<span class="sc" style="color: #5E5E5E;">$</span>st_int <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">as.integer</span>(<span class="fu" style="color: #4758AB;">as.factor</span>(<span class="fu" style="color: #4758AB;">paste0</span>(template<span class="sc" style="color: #5E5E5E;">$</span>Region, <span class="st" style="color: #20794D;">"."</span>, template<span class="sc" style="color: #5E5E5E;">$</span>ts_week)))</span>
+<span id="cb60-2"><span class="fu" style="color: #4758AB;">range</span>(template<span class="sc" style="color: #5E5E5E;">$</span>st_int)</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1]     1 36994</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="join-to-disease-data" class="level1">
+<h1>Join to Disease Data</h1>
+<p>Join observation data to the template. Times and locations without observations are coded as NA.</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb62" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><span class="co" style="color: #5E5E5E;">#FluSurv</span></span>
+<span id="cb62-2">flusurv_full <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">left_join</span>(template, flusurv, <span class="at" style="color: #657422;">by =</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="st" style="color: #20794D;">"location_name"</span>, <span class="st" style="color: #20794D;">"year"</span>, <span class="st" style="color: #20794D;">"epiweek"</span>)) </span>
+<span id="cb62-3">flusurv_full<span class="sc" style="color: #5E5E5E;">$</span>network[<span class="fu" style="color: #4758AB;">is.na</span>(flusurv_full<span class="sc" style="color: #5E5E5E;">$</span>network)] <span class="ot" style="color: #003B4F;">=</span> <span class="st" style="color: #20794D;">"none"</span></span>
+<span id="cb62-4"><span class="fu" style="color: #4758AB;">unique</span>(<span class="fu" style="color: #4758AB;">duplicated</span>(flusurv_full))</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb64" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><span class="fu" style="color: #4758AB;">head</span>(flusurv_full) <span class="co" style="color: #5E5E5E;">#times and locations w/out values assigned NA</span></span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="table table-sm table-striped">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 6%">
+<col style="width: 10%">
+<col style="width: 7%">
+<col style="width: 3%">
+<col style="width: 5%">
+<col style="width: 5%">
+<col style="width: 5%">
+<col style="width: 7%">
+<col style="width: 6%">
+<col style="width: 5%">
+<col style="width: 3%">
+<col style="width: 7%">
+<col style="width: 9%">
+<col style="width: 5%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">abbreviation</th>
+<th style="text-align: left;">location</th>
+<th style="text-align: left;">location_name</th>
+<th style="text-align: right;">population</th>
+<th style="text-align: right;">year</th>
+<th style="text-align: right;">epiweek</th>
+<th style="text-align: right;">ts_week</th>
+<th style="text-align: right;">Region</th>
+<th style="text-align: right;">en_est</th>
+<th style="text-align: right;">en_est.s</th>
+<th style="text-align: right;">st_int</th>
+<th style="text-align: right;">rate</th>
+<th style="text-align: right;">weeklyrate</th>
+<th style="text-align: right;">weeklyrate.s</th>
+<th style="text-align: left;">network</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">AL</td>
+<td style="text-align: left;">01</td>
+<td style="text-align: left;">Alabama</td>
+<td style="text-align: right;">5039877</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">9075</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AK</td>
+<td style="text-align: left;">02</td>
+<td style="text-align: left;">Alaska</td>
+<td style="text-align: right;">732673</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">20941</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AZ</td>
+<td style="text-align: left;">04</td>
+<td style="text-align: left;">Arizona</td>
+<td style="text-align: right;">7276316</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">1397</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AR</td>
+<td style="text-align: left;">05</td>
+<td style="text-align: left;">Arkansas</td>
+<td style="text-align: right;">3025891</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">18149</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CA</td>
+<td style="text-align: left;">06</td>
+<td style="text-align: left;">California</td>
+<td style="text-align: right;">39237836</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">27223</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">0.4</td>
+<td style="text-align: right;">-0.4771582</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CO</td>
+<td style="text-align: left;">08</td>
+<td style="text-align: left;">Colorado</td>
+<td style="text-align: right;">5812069</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">29317</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">0.4</td>
+<td style="text-align: right;">-0.4771582</td>
+<td style="text-align: left;">NA</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb65" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><span class="co" style="color: #5E5E5E;">#ILI Surveillance</span></span>
+<span id="cb65-2">ilinet_full <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">left_join</span>(template, ilinet, <span class="at" style="color: #657422;">by =</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="st" style="color: #20794D;">"location_name"</span>, <span class="st" style="color: #20794D;">"year"</span>, <span class="st" style="color: #20794D;">"epiweek"</span>))</span>
+<span id="cb65-3"><span class="fu" style="color: #4758AB;">unique</span>(<span class="fu" style="color: #4758AB;">duplicated</span>(ilinet_full))</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb67" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><span class="fu" style="color: #4758AB;">head</span>(ilinet_full)</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="table table-sm table-striped">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 6%">
+<col style="width: 9%">
+<col style="width: 7%">
+<col style="width: 3%">
+<col style="width: 5%">
+<col style="width: 5%">
+<col style="width: 4%">
+<col style="width: 7%">
+<col style="width: 6%">
+<col style="width: 4%">
+<col style="width: 7%">
+<col style="width: 9%">
+<col style="width: 4%">
+<col style="width: 7%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">abbreviation</th>
+<th style="text-align: left;">location</th>
+<th style="text-align: left;">location_name</th>
+<th style="text-align: right;">population</th>
+<th style="text-align: right;">year</th>
+<th style="text-align: right;">epiweek</th>
+<th style="text-align: right;">ts_week</th>
+<th style="text-align: right;">Region</th>
+<th style="text-align: right;">en_est</th>
+<th style="text-align: right;">en_est.s</th>
+<th style="text-align: right;">st_int</th>
+<th style="text-align: right;">unweighted</th>
+<th style="text-align: right;">unweighted.s</th>
+<th style="text-align: right;">total</th>
+<th style="text-align: right;">providers</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">AL</td>
+<td style="text-align: left;">01</td>
+<td style="text-align: left;">Alabama</td>
+<td style="text-align: right;">5039877</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">9075</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AK</td>
+<td style="text-align: left;">02</td>
+<td style="text-align: left;">Alaska</td>
+<td style="text-align: right;">732673</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">20941</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AZ</td>
+<td style="text-align: left;">04</td>
+<td style="text-align: left;">Arizona</td>
+<td style="text-align: right;">7276316</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">1397</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AR</td>
+<td style="text-align: left;">05</td>
+<td style="text-align: left;">Arkansas</td>
+<td style="text-align: right;">3025891</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">18149</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CA</td>
+<td style="text-align: left;">06</td>
+<td style="text-align: left;">California</td>
+<td style="text-align: right;">39237836</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">27223</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CO</td>
+<td style="text-align: left;">08</td>
+<td style="text-align: left;">Colorado</td>
+<td style="text-align: right;">5812069</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">29317</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb68" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><span class="co" style="color: #5E5E5E;">#HHS </span></span>
+<span id="cb68-2">flu_HHS_full <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">left_join</span>(template, flu_HHS, <span class="at" style="color: #657422;">by =</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="st" style="color: #20794D;">"abbreviation"</span>, <span class="st" style="color: #20794D;">"year"</span>, <span class="st" style="color: #20794D;">"epiweek"</span>))</span>
+<span id="cb68-3"><span class="fu" style="color: #4758AB;">unique</span>(<span class="fu" style="color: #4758AB;">duplicated</span>(flu_HHS_full))</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb70" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><span class="fu" style="color: #4758AB;">unique</span>(<span class="fu" style="color: #4758AB;">duplicated</span>(flu_HHS_full[,<span class="fu" style="color: #4758AB;">c</span>(<span class="st" style="color: #20794D;">"ts_week"</span>, <span class="st" style="color: #20794D;">"Region"</span>)]))</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb72" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><span class="fu" style="color: #4758AB;">head</span>(flu_HHS_full)</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="table table-sm table-striped">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 8%">
+<col style="width: 12%">
+<col style="width: 10%">
+<col style="width: 4%">
+<col style="width: 7%">
+<col style="width: 7%">
+<col style="width: 6%">
+<col style="width: 9%">
+<col style="width: 8%">
+<col style="width: 6%">
+<col style="width: 8%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">abbreviation</th>
+<th style="text-align: left;">location</th>
+<th style="text-align: left;">location_name</th>
+<th style="text-align: right;">population</th>
+<th style="text-align: right;">year</th>
+<th style="text-align: right;">epiweek</th>
+<th style="text-align: right;">ts_week</th>
+<th style="text-align: right;">Region</th>
+<th style="text-align: right;">en_est</th>
+<th style="text-align: right;">en_est.s</th>
+<th style="text-align: right;">st_int</th>
+<th style="text-align: right;">hosp_inc</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">AL</td>
+<td style="text-align: left;">01</td>
+<td style="text-align: left;">Alabama</td>
+<td style="text-align: right;">5039877</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">9075</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AK</td>
+<td style="text-align: left;">02</td>
+<td style="text-align: left;">Alaska</td>
+<td style="text-align: right;">732673</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">20941</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AZ</td>
+<td style="text-align: left;">04</td>
+<td style="text-align: left;">Arizona</td>
+<td style="text-align: right;">7276316</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">1397</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AR</td>
+<td style="text-align: left;">05</td>
+<td style="text-align: left;">Arkansas</td>
+<td style="text-align: right;">3025891</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">18149</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CA</td>
+<td style="text-align: left;">06</td>
+<td style="text-align: left;">California</td>
+<td style="text-align: right;">39237836</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">27223</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CO</td>
+<td style="text-align: left;">08</td>
+<td style="text-align: left;">Colorado</td>
+<td style="text-align: right;">5812069</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">29317</td>
+<td style="text-align: right;">NA</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb73" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><span class="co" style="color: #5E5E5E;">#nrevss </span></span>
+<span id="cb73-2">nrevss_full <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">left_join</span>(template, nrevss, <span class="at" style="color: #657422;">by =</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="st" style="color: #20794D;">"location_name"</span>, <span class="st" style="color: #20794D;">"year"</span>, <span class="st" style="color: #20794D;">"epiweek"</span>))</span>
+<span id="cb73-3"><span class="fu" style="color: #4758AB;">unique</span>(<span class="fu" style="color: #4758AB;">duplicated</span>(nrevss_full))</span></code></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE</code></pre>
+</div>
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb75" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><span class="fu" style="color: #4758AB;">head</span>(nrevss_full)</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="table table-sm table-striped">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 7%">
+<col style="width: 12%">
+<col style="width: 9%">
+<col style="width: 4%">
+<col style="width: 7%">
+<col style="width: 7%">
+<col style="width: 6%">
+<col style="width: 8%">
+<col style="width: 7%">
+<col style="width: 6%">
+<col style="width: 4%">
+<col style="width: 6%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">abbreviation</th>
+<th style="text-align: left;">location</th>
+<th style="text-align: left;">location_name</th>
+<th style="text-align: right;">population</th>
+<th style="text-align: right;">year</th>
+<th style="text-align: right;">epiweek</th>
+<th style="text-align: right;">ts_week</th>
+<th style="text-align: right;">Region</th>
+<th style="text-align: right;">en_est</th>
+<th style="text-align: right;">en_est.s</th>
+<th style="text-align: right;">st_int</th>
+<th style="text-align: right;">Apos</th>
+<th style="text-align: right;">Apos.s</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">AL</td>
+<td style="text-align: left;">01</td>
+<td style="text-align: left;">Alabama</td>
+<td style="text-align: right;">5039877</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">9075</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AK</td>
+<td style="text-align: left;">02</td>
+<td style="text-align: left;">Alaska</td>
+<td style="text-align: right;">732673</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">20941</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AZ</td>
+<td style="text-align: left;">04</td>
+<td style="text-align: left;">Arizona</td>
+<td style="text-align: right;">7276316</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">1397</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AR</td>
+<td style="text-align: left;">05</td>
+<td style="text-align: left;">Arkansas</td>
+<td style="text-align: right;">3025891</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">18149</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CA</td>
+<td style="text-align: left;">06</td>
+<td style="text-align: left;">California</td>
+<td style="text-align: right;">39237836</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">27223</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CO</td>
+<td style="text-align: left;">08</td>
+<td style="text-align: left;">Colorado</td>
+<td style="text-align: right;">5812069</td>
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">-6.395</td>
+<td style="text-align: right;">29317</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<section id="view-coverage" class="level2">
+<h2 class="anchored" data-anchor-id="view-coverage">View Coverage</h2>
+<p>Looking at holes in the data. Not interested in exact values, only comparing data coverage.</p>
+<div class="cell">
+<details open="">
+<summary>Hide code</summary>
+<div class="sourceCode cell-code" id="cb76" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1">fs_plt <span class="ot" style="color: #003B4F;">&lt;-</span> flusurv_full <span class="sc" style="color: #5E5E5E;">%&gt;%</span> </span>
+<span id="cb76-2">  <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">value =</span> weeklyrate.s,</span>
+<span id="cb76-3">         <span class="at" style="color: #657422;">set =</span> <span class="st" style="color: #20794D;">"FluSurv"</span>) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb76-4">  <span class="fu" style="color: #4758AB;">select</span>(location_name, ts_week, value, set)</span>
+<span id="cb76-5"></span>
+<span id="cb76-6">ili_plt <span class="ot" style="color: #003B4F;">&lt;-</span> ilinet_full <span class="sc" style="color: #5E5E5E;">%&gt;%</span> </span>
+<span id="cb76-7">  <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">value =</span> unweighted.s,</span>
+<span id="cb76-8">          <span class="at" style="color: #657422;">set =</span> <span class="st" style="color: #20794D;">"ILI"</span>) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb76-9">  <span class="fu" style="color: #4758AB;">select</span>(location_name, ts_week, value, set)</span>
+<span id="cb76-10"></span>
+<span id="cb76-11">hhs_plt <span class="ot" style="color: #003B4F;">&lt;-</span> flu_HHS_full <span class="sc" style="color: #5E5E5E;">%&gt;%</span> </span>
+<span id="cb76-12">  <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">value =</span> <span class="fu" style="color: #4758AB;">log</span>(hosp_inc<span class="fl" style="color: #AD0000;">+0.0001</span>),</span>
+<span id="cb76-13">          <span class="at" style="color: #657422;">set =</span> <span class="st" style="color: #20794D;">"HHS"</span>) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb76-14">  <span class="fu" style="color: #4758AB;">select</span>(location_name, ts_week, value, set)</span>
+<span id="cb76-15"></span>
+<span id="cb76-16">nrevss_plt <span class="ot" style="color: #003B4F;">&lt;-</span> nrevss_full <span class="sc" style="color: #5E5E5E;">%&gt;%</span> </span>
+<span id="cb76-17">  <span class="fu" style="color: #4758AB;">mutate</span>(<span class="at" style="color: #657422;">value =</span> Apos.s,</span>
+<span id="cb76-18">          <span class="at" style="color: #657422;">set =</span> <span class="st" style="color: #20794D;">"NREVSS"</span>) <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb76-19">  <span class="fu" style="color: #4758AB;">select</span>(location_name, ts_week, value, set)</span>
+<span id="cb76-20"></span>
+<span id="cb76-21"></span>
+<span id="cb76-22">all_plts <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">rbind</span>(fs_plt, ili_plt, hhs_plt, nrevss_plt)</span>
+<span id="cb76-23">all_plts<span class="sc" style="color: #5E5E5E;">$</span>set <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">ordered</span>(<span class="fu" style="color: #4758AB;">factor</span>(all_plts<span class="sc" style="color: #5E5E5E;">$</span>set), <span class="at" style="color: #657422;">levels =</span> <span class="fu" style="color: #4758AB;">c</span>(<span class="st" style="color: #20794D;">"FluSurv"</span>, <span class="st" style="color: #20794D;">"ILI"</span>, <span class="st" style="color: #20794D;">"NREVSS"</span>, <span class="st" style="color: #20794D;">"HHS"</span>))</span>
+<span id="cb76-24"></span>
+<span id="cb76-25"><span class="fu" style="color: #4758AB;">ggplot</span>() <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb76-26"><span class="fu" style="color: #4758AB;">geom_tile</span>(<span class="at" style="color: #657422;">data=</span>all_plts,</span>
+<span id="cb76-27">          <span class="fu" style="color: #4758AB;">aes</span>(ts_week, location_name, <span class="at" style="color: #657422;">fill =</span> value)) <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb76-28"><span class="fu" style="color: #4758AB;">xlab</span>(<span class="st" style="color: #20794D;">" "</span>) <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb76-29">viridis<span class="sc" style="color: #5E5E5E;">::</span><span class="fu" style="color: #4758AB;">scale_fill_viridis</span>(<span class="fu" style="color: #4758AB;">paste0</span>(<span class="st" style="color: #20794D;">" "</span>),</span>
+<span id="cb76-30">                             <span class="at" style="color: #657422;">discrete=</span>F,</span>
+<span id="cb76-31">                             <span class="at" style="color: #657422;">option =</span> <span class="st" style="color: #20794D;">"turbo"</span>,</span>
+<span id="cb76-32">                             <span class="at" style="color: #657422;">direction =</span> <span class="sc" style="color: #5E5E5E;">-</span><span class="dv" style="color: #AD0000;">1</span>,</span>
+<span id="cb76-33">                             <span class="at" style="color: #657422;">na.value =</span> <span class="st" style="color: #20794D;">"white"</span>) <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb76-34"><span class="fu" style="color: #4758AB;">ylab</span>(<span class="st" style="color: #20794D;">"Location"</span>) <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb76-35"><span class="fu" style="color: #4758AB;">xlab</span>(<span class="st" style="color: #20794D;">"Weekly Timesteps (2010-2023)"</span>) <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb76-36"><span class="fu" style="color: #4758AB;">facet_wrap</span>(<span class="sc" style="color: #5E5E5E;">~</span>set, <span class="at" style="color: #657422;">ncol =</span> <span class="dv" style="color: #AD0000;">4</span>) <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb76-37"><span class="fu" style="color: #4758AB;">theme</span>(<span class="at" style="color: #657422;">panel.grid.minor =</span> <span class="fu" style="color: #4758AB;">element_blank</span>(),</span>
+<span id="cb76-38">      <span class="at" style="color: #657422;">panel.grid.major =</span> <span class="fu" style="color: #4758AB;">element_blank</span>(),</span>
+<span id="cb76-39">      <span class="at" style="color: #657422;">panel.background =</span> <span class="fu" style="color: #4758AB;">element_blank</span>(),</span>
+<span id="cb76-40">      <span class="at" style="color: #657422;">plot.background =</span> <span class="fu" style="color: #4758AB;">element_blank</span>(),</span>
+<span id="cb76-41">      <span class="at" style="color: #657422;">panel.border =</span> <span class="fu" style="color: #4758AB;">element_blank</span>(),</span>
+<span id="cb76-42">      <span class="at" style="color: #657422;">legend.title =</span> <span class="fu" style="color: #4758AB;">element_text</span>(<span class="at" style="color: #657422;">size =</span> <span class="dv" style="color: #AD0000;">16</span>, <span class="at" style="color: #657422;">face =</span> <span class="st" style="color: #20794D;">"bold"</span>, <span class="at" style="color: #657422;">hjust=</span><span class="fl" style="color: #AD0000;">0.5</span>),</span>
+<span id="cb76-43">      <span class="at" style="color: #657422;">legend.text =</span> <span class="fu" style="color: #4758AB;">element_text</span>(<span class="at" style="color: #657422;">size=</span><span class="dv" style="color: #AD0000;">10</span>, <span class="at" style="color: #657422;">face=</span><span class="st" style="color: #20794D;">"bold"</span>),</span>
+<span id="cb76-44">      <span class="at" style="color: #657422;">strip.text =</span> <span class="fu" style="color: #4758AB;">element_text</span>(<span class="at" style="color: #657422;">size=</span><span class="dv" style="color: #AD0000;">16</span>, <span class="at" style="color: #657422;">face=</span><span class="st" style="color: #20794D;">"bold"</span>),</span>
+<span id="cb76-45">      <span class="at" style="color: #657422;">strip.background =</span> <span class="fu" style="color: #4758AB;">element_blank</span>(),</span>
+<span id="cb76-46">      <span class="at" style="color: #657422;">legend.position=</span><span class="st" style="color: #20794D;">"none"</span>, </span>
+<span id="cb76-47">      <span class="at" style="color: #657422;">legend.direction =</span> <span class="st" style="color: #20794D;">"horizontal"</span>,</span>
+<span id="cb76-48">      <span class="at" style="color: #657422;">legend.box =</span> <span class="st" style="color: #20794D;">"horizontal"</span>,</span>
+<span id="cb76-49">      <span class="at" style="color: #657422;">axis.text.y =</span> <span class="fu" style="color: #4758AB;">element_text</span>(<span class="at" style="color: #657422;">face=</span><span class="st" style="color: #20794D;">"bold"</span>, <span class="at" style="color: #657422;">size=</span><span class="dv" style="color: #AD0000;">5</span>),</span>
+<span id="cb76-50">      <span class="at" style="color: #657422;">axis.text.x =</span> <span class="fu" style="color: #4758AB;">element_text</span>(<span class="at" style="color: #657422;">face=</span><span class="st" style="color: #20794D;">"bold"</span>, <span class="at" style="color: #657422;">size=</span><span class="dv" style="color: #AD0000;">12</span>, <span class="at" style="color: #657422;">vjust=</span><span class="fl" style="color: #AD0000;">0.5</span>,</span>
+<span id="cb76-51">                                 <span class="at" style="color: #657422;">hjust=</span><span class="dv" style="color: #AD0000;">1</span>, <span class="at" style="color: #657422;">angle=</span><span class="dv" style="color: #AD0000;">90</span>),</span>
+<span id="cb76-52">      <span class="at" style="color: #657422;">axis.title.x =</span> <span class="fu" style="color: #4758AB;">element_text</span>(<span class="at" style="color: #657422;">size=</span><span class="dv" style="color: #AD0000;">12</span>, <span class="at" style="color: #657422;">face=</span><span class="st" style="color: #20794D;">"bold"</span>),</span>
+<span id="cb76-53">      <span class="at" style="color: #657422;">axis.title.y =</span> <span class="fu" style="color: #4758AB;">element_text</span>(<span class="at" style="color: #657422;">size=</span><span class="dv" style="color: #AD0000;">18</span>, <span class="at" style="color: #657422;">face=</span><span class="st" style="color: #20794D;">"bold"</span>),</span>
+<span id="cb76-54">      <span class="at" style="color: #657422;">plot.title =</span> <span class="fu" style="color: #4758AB;">element_text</span>(<span class="at" style="color: #657422;">size=</span><span class="dv" style="color: #AD0000;">18</span>, <span class="at" style="color: #657422;">face=</span><span class="st" style="color: #20794D;">"bold"</span>, <span class="at" style="color: #657422;">hjust=</span><span class="fl" style="color: #AD0000;">0.5</span>)) <span class="sc" style="color: #5E5E5E;">+</span></span>
+<span id="cb76-55"><span class="fu" style="color: #4758AB;">guides</span>(<span class="at" style="color: #657422;">color =</span> <span class="fu" style="color: #4758AB;">guide_legend</span>(<span class="at" style="color: #657422;">title.position =</span> <span class="st" style="color: #20794D;">"top"</span>, <span class="at" style="color: #657422;">label.position =</span> <span class="st" style="color: #20794D;">"bottom"</span>))</span></code></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="https://jmhumphreys.github.io/flusion_model/construction/preprocessing/preprocessing_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid" width="768"></p>
+</div>
+</div>
+<div class="cell">
+
+</div>
+</section>
+</section>
+<section id="next-step-organize-data" class="level1">
+<h1><a href="https://jmhumphreys.github.io/flusion_model/construction/organize/organize.html">Next Step: Organize Data</a></h1>
+
+
+</section>
+
+ ]]></description>
+  <guid>https://jmhumphreys.github.io/flusion_model/construction/preprocessing/preprocessing.html</guid>
+  <pubDate>Thu, 08 Jun 2023 19:17:24 GMT</pubDate>
+</item>
+<item>
+  <title>Model Results</title>
+  <link>https://jmhumphreys.github.io/flusion_model/construction/results/results.html</link>
+  <description><![CDATA[ 
+
+
+
+<style type="text/css">
+
+body, td {
+   font-size: 13pt;
+}
+code.r{
+  font-size: 9pt;
+}
+pre {
+  font-size: 11pt
+}
+</style>
+<section id="preliminaries" class="level1">
+<h1>Preliminaries</h1>
+<p>Setup working environment and loading necessary packages.</p>
+<section id="libraries" class="level2">
+<h2 class="anchored" data-anchor-id="libraries">Libraries</h2>
+<div class="cell">
+
+</div>
+</section>
+</section>
+<section id="observation-data" class="level1">
+<h1>Observation Data</h1>
+<section id="flusurv" class="level2">
+<h2 class="anchored" data-anchor-id="flusurv">FluSurv</h2>
+
+
+</section>
+</section>
+
+ ]]></description>
+  <guid>https://jmhumphreys.github.io/flusion_model/construction/results/results.html</guid>
+  <pubDate>Thu, 08 Jun 2023 19:17:24 GMT</pubDate>
+</item>
+</channel>
+</rss>

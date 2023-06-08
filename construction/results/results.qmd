@@ -1,0 +1,78 @@
+---
+title: "Model Results"
+description: "Import and wrangle mutlisourced influenza observations"
+format:
+  html:
+    df-print: kable
+    code-fold: show
+    code-summary: "Hide code"
+    code-overflow: wrap
+    toc-title: Page Contents
+    toc: true
+    toc-depth: 2
+    toc-location: right
+    number-sections: false
+    html-math-method: katex
+    css: styles.css
+    theme: flatly
+    smooth-scroll: true
+editor_options: 
+  chunk_output_type: console
+---
+<style type="text/css">
+
+body, td {
+   font-size: 13pt;
+}
+code.r{
+  font-size: 9pt;
+}
+pre {
+  font-size: 11pt
+}
+</style>
+
+# Preliminaries  
+Setup working environment and loading necessary packages.
+  
+## Libraries
+```{r warning=FALSE, message=FALSE,echo=FALSE}
+#wrangling
+library(tidyverse)
+library(lubridate)
+library(data.table, include.only = "fread")
+library(cdcfluview)
+library(yaml)
+
+#spatial
+library(sp)
+library(sf)
+library(spdep)
+library(rgeos)
+library(igraph)
+library(maptools)
+library(mapproj)
+library(CovidCAR)
+#devtools::install_github("JMHumphreys/CovidCAR")
+
+#messages
+library(cli)
+
+#inference
+library(INLA)
+
+#Utilities
+#source("./R/utilities.R")
+
+options(dplyr.summarise.inform = FALSE)
+
+#function
+download_file <- function(url, filename) {
+  download.file(url, destfile = filename, method = "auto", quiet = FALSE, mode = "wb")
+}
+```
+
+# Observation Data
+## FluSurv  
+
+

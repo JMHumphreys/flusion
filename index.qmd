@@ -1,0 +1,27 @@
+---
+image: images/flusion.png
+#about:
+#  template: trestles
+format:
+  html:
+    code-fold: show
+    code-summary: "Hide code"
+    code-overflow: wrap
+    number-sections: false
+    html-math-method: katex
+    css: styles.css
+    theme: flatly
+    toc-location: right
+    smooth-scroll: true
+comments: false
+title-block-banner: true
+editor_options: 
+  chunk_output_type: console
+---
+
+# Welcome to f(l)usion 
+Work in progress! 
+
+### Download *f(l)usion* Data
+
+

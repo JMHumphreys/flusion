@@ -1,0 +1,23 @@
+---
+title: "Explore f(l)usion"
+description: "Constructing formula and running the model."
+format:
+  html:
+    df-print: kable
+    code-fold: show
+    code-summary: "Hide code"
+    code-overflow: wrap
+    toc-title: Page Contents
+    toc: true
+    toc-depth: 2
+    toc-location: right
+    number-sections: false
+    html-math-method: katex
+    css: styles.css
+    theme: flatly
+    smooth-scroll: true
+editor_options: 
+  chunk_output_type: console
+---
+
+# Test Page
