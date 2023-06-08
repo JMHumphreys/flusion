@@ -72,7 +72,7 @@ load("D:/Github/flusion/data/dstacks_06072023.RData")
 ```
 
 # Prior Specifications
-
+ 
 ```{r}
 #PC Prior
 pcprior1 = list(prec = list(prior="pc.prec", param = c(1, 0.001)))

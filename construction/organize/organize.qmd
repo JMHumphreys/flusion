@@ -75,7 +75,7 @@ options(dplyr.summarise.inform = FALSE)
 ```
 
 ## ILI DataStack
-
+ 
 The ILI model will occupy the base level of the joint model and pass *information* to both the middle level submodel (NREVSS) and the top level HHS submodel.
 
 ```{r}

@@ -19,6 +19,8 @@ format:
 editor_options: 
   chunk_output_type: console
 ---
+
+```{=html}
 <style type="text/css">
 
 body, td {
@@ -31,11 +33,13 @@ pre {
   font-size: 11pt
 }
 </style>
+```
+# Preliminaries
 
-# Preliminaries  
 Setup working environment and loading necessary packages.
-  
+
 ## Libraries
+ 
 ```{r warning=FALSE, message=FALSE,echo=FALSE}
 #wrangling
 library(tidyverse)
@@ -73,6 +77,5 @@ download_file <- function(url, filename) {
 ```
 
 # Observation Data
-## FluSurv  
 
-
+## FluSurv
