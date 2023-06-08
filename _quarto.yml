@@ -8,7 +8,7 @@ execute:
 website:
   page-navigation: true
   site-url: https://jmhumphreys.github.io/flusion/
-  repo-actions: [edit, issue]  
+  repo-actions: [edit, source, issue]  
   open-graph: true
   sidebar:
     style: "floating"
