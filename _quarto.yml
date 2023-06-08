@@ -8,7 +8,7 @@ execute:
 website:
   page-navigation: true
   site-url: https://jmhumphreys.github.io/flusion/
-  repo-actions: [edit, issue]
+  repo-actions: [edit, issue]  
   open-graph: true
   sidebar:
     style: "floating"
@@ -39,7 +39,7 @@ website:
   page-footer:
     border: false
     left: "Published with [Quarto](https://quarto.org/) v1.2.335"
-    right: "© 2023 [John Humphreys](/about) | [MIT License](/license)"
+    right: "© 2023 | [MIT License](/license)"
         
 format:
   html:
