@@ -19,6 +19,8 @@ format:
 editor_options: 
   chunk_output_type: console
 ---
+
+```{=html}
 <style type="text/css">
 
 body, td {
@@ -31,13 +33,13 @@ pre {
   font-size: 11pt
 }
 </style>
+```
+# Overview
 
-# Overview   
-Having completed data preprocessing and data organization, a formula is constructed and the model run.    
-     
-**Note:** This script requires that both the data [**Preprocessing**](file:///D:/Github/flusion_model/docs/construction/preprocessing/preprocessing.html) and the [**Data Organization**](file:///D:/Github/flusion_model/docs/construction/organize/organize.html) have already been completed with all resulting objects available in the working environment.    
-      
-        
+Having completed data preprocessing and data organization, a formula is constructed and the model run.
+
+**Note:** This script requires that both the data [**Preprocessing**](https://jmhumphreys.github.io/flusion/construction/preprocessing/preprocessing.html) and the [**Data Organization**](https://jmhumphreys.github.io/flusion/construction/organize/organize.html) have already been completed with all resulting objects available in the working environment.
+
 ```{r warning=FALSE, message=FALSE,echo=FALSE}
 #wrangling
 library(tidyverse)
@@ -66,10 +68,11 @@ library(INLA)
 options(dplyr.summarise.inform = FALSE)
 
 #Preprocessing  
-load("D:/Github/flusion_model/data/dstacks_06072023.RData")
+load("D:/Github/flusion/data/dstacks_06072023.RData")
 ```
 
 # Prior Specifications
+
 ```{r}
 #PC Prior
 pcprior1 = list(prec = list(prior="pc.prec", param = c(1, 0.001)))
@@ -93,8 +96,8 @@ pc_rw <- list(prec=list(prior="pc.prec",
                         param=c(0.5,0.01)))
 ```
 
-
 # Joint Model Formula
+
 ```{r eval=FALSE}
 Frm.1 = Y ~ -1 + intercept1 + #intercept for ILI submodel
                  intercept2 + #intercept for NREVSS submodel

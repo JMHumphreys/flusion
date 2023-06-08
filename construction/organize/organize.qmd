@@ -19,6 +19,8 @@ format:
 editor_options: 
   chunk_output_type: console
 ---
+
+```{=html}
 <style type="text/css">
 
 body, td {
@@ -31,13 +33,13 @@ pre {
   font-size: 11pt
 }
 </style>
+```
+# Overview
 
-# Overview   
-Organizing data for a three-part joint model can be complex.  This script walks through *DataStack* construction where a DataStack is a list object that holds all data for model fitting.  Because this is a three-part model, DataStacks will be created for each submodel (e.g., an ILI submodel, a NREVSS submodel, and a HHS submodel) then the three submodel DataStacks will be combined as a *joint_stack*.  As part of DataStack construction, a three-part response/dependent variable will be specified as a three-column matrix.    
-     
-**Note:** This script requires that data [**Preprocessing**](file:///D:/Github/flusion_model/docs/construction/preprocessing/preprocessing.html) has already been completed and all **Preprocessing** objects are available in the working environment.    
-      
-        
+Organizing data for a three-part joint model can be complex. This script walks through *DataStack* construction where a DataStack is a list object that holds all data for model fitting. Because this is a three-part model, DataStacks will be created for each submodel (e.g., an ILI submodel, a NREVSS submodel, and a HHS submodel) then the three submodel DataStacks will be combined as a *joint_stack*. As part of DataStack construction, a three-part response/dependent variable will be specified as a three-column matrix.
+
+**Note:** This script requires that data [**Preprocessing**](https://jmhumphreys.github.io/flusion/construction/preprocessing/preprocessing.html) has already been completed and all **Preprocessing** objects are available in the working environment.
+
 ```{r warning=FALSE, message=FALSE, echo=FALSE}
 #wrangling
 library(tidyverse)
@@ -67,14 +69,16 @@ library(INLA)
 #source("./R/utilities.R")
 
 #Preprocessing  
-load("D:/Github/flusion_model/data/prepro_06072023.RData")
+load("D:/Github/flusion/data/prepro_06072023.RData")
 
 options(dplyr.summarise.inform = FALSE)
 ```
 
-## ILI DataStack  
-The ILI model will occupy the base level of the joint model and pass *information* to both the middle level submodel (NREVSS) and the top level HHS submodel.  
-```{r} 
+## ILI DataStack
+
+The ILI model will occupy the base level of the joint model and pass *information* to both the middle level submodel (NREVSS) and the top level HHS submodel.
+
+```{r}
 ilinet_full <- as.data.frame(ilinet_full) %>%
   mutate(y_ili = unweighted.s, #Response variable, logit transformed percentage of influenza-like illnesses.
          l.pop.ili = log(population), #log population size
@@ -126,9 +130,11 @@ ili.stk = inla.stack(data = list(Y = cbind(ilinet_full$y_ili, NA, NA)), #base le
                                     tag = "ili")      #arbitrary name/label to pull data later
 ```
 
-## NREVSS Set  
-Similar to ILI DataStack above, creating one for the NREVSS submodel.  Note that some variable names are the same as in the ILI DataStack (e.g., Region and st_int) BUT some are specific to this DataStack with a *.nv* designation: If a variable name is included in the joint model formula, it can only contribute to the submodels that also have it.  This provides control such that some variables may be specific to one submodel or one DataStack, whereas other variables may be applicable to all submodels concurrently.   
-```{r} 
+## NREVSS Set
+
+Similar to ILI DataStack above, creating one for the NREVSS submodel. Note that some variable names are the same as in the ILI DataStack (e.g., Region and st_int) BUT some are specific to this DataStack with a *.nv* designation: If a variable name is included in the joint model formula, it can only contribute to the submodels that also have it. This provides control such that some variables may be specific to one submodel or one DataStack, whereas other variables may be applicable to all submodels concurrently.
+
+```{r}
 nrevss_full <- as.data.frame(nrevss_full) %>%
   mutate(y_nrvs = Apos.s, #confirmed positive influenza A, logit transformed percentage
          l.pop.nv = log(population),
@@ -179,9 +185,11 @@ nv.stk = inla.stack(data = list(Y = cbind(NA, nrevss_full$y_nrvs, NA)), #NA in t
                                     tag = "nrvs")
 ```
 
-## HHS Set  
-Much the same as the ILI and NREVVS DataStacks.  
-```{r warning=FALSE} 
+## HHS Set
+
+Much the same as the ILI and NREVVS DataStacks.
+
+```{r warning=FALSE}
 flu_HHS_full <- as.data.frame(flu_HHS_full) %>%
   mutate(y_hhs = log(hosp_inc+0.0001), #log hospital incidence (response variable)
          l.pop.hhs = log(population),
@@ -231,12 +239,14 @@ hhs.stk = inla.stack(data = list(Y = cbind(NA, NA, flu_HHS_full$y_hhs)), #NAs fo
                                     tag = "hhs")   
 ```
 
+## Join Datastacks
 
-## Join Datastacks   
-Joining all three above DataStacks to a common object, joint DataStack.  This is all the data needed for running the model.
+Joining all three above DataStacks to a common object, joint DataStack. This is all the data needed for running the model.
+
 ```{r}
 joint_stack <- inla.stack(ili.stk, nv.stk, hhs.stk)
 ```
+
 ```{r warning=FALSE, message=FALSE,echo=FALSE}
 #save(list=c("nrevss_full", "J", "ilinet_full", "flu_HHS_full", "joint_stack"), file="./data/dstacks_06072023.RData", version = 2)
 ```

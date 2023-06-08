@@ -19,6 +19,8 @@ format:
 editor_options: 
   chunk_output_type: console
 ---
+
+```{=html}
 <style type="text/css">
 
 body, td {
@@ -31,11 +33,13 @@ pre {
   font-size: 11pt
 }
 </style>
+```
+# Preliminaries
 
-# Preliminaries  
 Setup working environment and loading necessary packages.
-  
+
 ## Libraries
+
 ```{r warning=FALSE, message=FALSE}
 #wrangling
 library(tidyverse)
@@ -73,8 +77,11 @@ download_file <- function(url, filename) {
 ```
 
 # Observation Data
-## FluSurv  
-Build a flu hospitalization data file from individual state reports and all available years.  The *hospitalizations()* function from the **cdcfluview** package does most of the work by querying [FluView](https://gis.cdc.gov/GRASP/Fluview/FluHospRates.html), but seems only to be able to take small bites at a time.  
+
+## FluSurv
+
+Build a flu hospitalization data file from individual state reports and all available years. The *hospitalizations()* function from the **cdcfluview** package does most of the work by querying [FluView](https://gis.cdc.gov/GRASP/Fluview/FluHospRates.html), but seems only to be able to take small bites at a time.
+
 ```{r eval=TRUE}
 myRegions <- surveillance_areas() 
 
@@ -82,9 +89,10 @@ flusurv_all <- do.call(rbind, lapply(seq_len(dim(myRegions)[1]), function(i) {
   hospitalizations(surveillance_area = myRegions$surveillance_area[i], region = myRegions$region[i])
 }))
 ```
-   
-Wrangle Flusurv data:    
-Note that the **cdcfluview** package only includes through Spring of 2020.  Because of this, the data is filtered at 2019 and a static file manually downloaded from FluView with more recnt reports (eventually this data will be moved to www.healthdata.gov).
+
+Wrangle Flusurv data:\
+Note that the **cdcfluview** package only includes through Spring of 2020. Because of this, the data is filtered at 2019 and a static file manually downloaded from FluView with more recnt reports (eventually this data will be moved to www.healthdata.gov).
+
 ```{r warning=FALSE}
 range(flusurv_all$year)
 
@@ -99,7 +107,7 @@ flusurv <- flusurv_all %>%
     select(location_name, year, epiweek, network, rate, weeklyrate)
   
 #manual download from site 2023-06-01
-flusurv_2020 <- fread("D:/Github/flusion_model/data/FluSurveillance_2020.csv") %>%
+flusurv_2020 <- fread("D:/Github/flusion/data/FluSurveillance_2020.csv") %>%
   rename_all(~gsub(" |-", "", .)) %>%
   filter(AGECATEGORY == "Overall",
          SEXCATEGORY == "Overall",
@@ -136,6 +144,7 @@ head(flusurv)
 ```
 
 Same FluSurv process as above, but now for the Full Network reports
+
 ```{r}
 flusurv_en <- flusurv_all %>%
   filter(age_label == "Overall",
@@ -146,7 +155,7 @@ flusurv_en <- flusurv_all %>%
          epiweek = year_wk_num) %>%
     select(location_name, year, epiweek, network, rate, weeklyrate)
 
-flusurv_en2020 <- fread("D:/Github/flusion_model/data/FluSurveillance_2020.csv") %>%
+flusurv_en2020 <- fread("D:/Github/flusion/data/FluSurveillance_2020.csv") %>%
   rename_all(~gsub(" |-", "", .)) %>%
   filter(AGECATEGORY == "Overall",
          SEXCATEGORY == "Overall",
@@ -169,9 +178,10 @@ dim(flusurv_en)
 head(flusurv_en)
 ```
 
+## ILINet Surveillance Data
 
-## ILINet Surveillance Data  
-Influenza Like Illness (ILI) data using **cdcfluview** package.  Unlike FluSurv, data is available 2010-2013.    
+Influenza Like Illness (ILI) data using **cdcfluview** package. Unlike FluSurv, data is available 2010-2013.
+
 ```{r}
 ilinet <- ilinet(region = "state") %>%
   mutate(location_name = region,
@@ -195,20 +205,22 @@ range(ilinet$year)
 head(ilinet)
 ```
 
+## COVID19 RPIHC
 
-## COVID19 RPIHC by State Timeseries (raw)  
 Downloading the COVID-19 Reported Patient Impact and Hospital Capacity by State Timeseries from https://healthdata.gov/.
+
 ```{r eval=TRUE, warning=FALSE, message=FALSE}
 url <- "https://healthdata.gov/api/views/g62h-syeh/rows.csv?accessType=DOWNLOAD"
-filename <- "D:/Github/flusion_model/data/flu_HHS.csv"
+filename <- "D:/Github/flusion/data/flu_HHS.csv"
 
 download_file(url, filename)
 ```
 
 Read and wrangle RPIHC:
+
 ```{r}
 
-flu_HHS <- fread("D:/Github/flusion_model/data/flu_HHS.csv") %>%
+flu_HHS <- fread("D:/Github/flusion/data/flu_HHS.csv") %>%
   mutate(abbreviation = state,
          date = as_date(date) - 1, #1-day prior, per fluSight truth
          year = year(date),
@@ -222,15 +234,16 @@ range(flu_HHS$year)
 head(flu_HHS)
 ```
 
-
 ## NREVSS
-National Respiratory and Enteric Virus Surveillance System.  
-     
-Again, unfortunately only available through a manual: https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html   
-Files illustrated here were downloaded on June 2, 2023.   
+
+National Respiratory and Enteric Virus Surveillance System.
+
+Again, unfortunately only available through a manual: https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html\
+Files illustrated here were downloaded on June 2, 2023.
+
 ```{r warning=FALSE, message=FALSE}
 
-nrevss.1 <- fread("D:/Github/flusion_model/data/WHO_NREVSS_Combined_prior_to_2015_16.csv") %>%
+nrevss.1 <- fread("D:/Github/flusion/data/WHO_NREVSS_Combined_prior_to_2015_16.csv") %>%
   rename_all(~gsub(" |-", "", .)) %>%
   mutate(location_name = REGION,
          year = YEAR,
@@ -242,7 +255,7 @@ nrevss.1 <- fread("D:/Github/flusion_model/data/WHO_NREVSS_Combined_prior_to_201
   select(location_name, year, epiweek, Apos)
 
 
-nrevss.2 <- fread("D:/Github/flusion_model/data/WHO_NREVSS_Clinical_Labs.csv") %>%
+nrevss.2 <- fread("D:/Github/flusion/data/WHO_NREVSS_Clinical_Labs.csv") %>%
   rename_all(~gsub(" |-", "", .)) %>%
   mutate(location_name = REGION,
          year = YEAR,
@@ -265,32 +278,35 @@ unique(duplicated(nrevss))
 head(nrevss)
 ```
 
-
 # Location Template
 
 ## Location Table
-Location codes and population numbers from FluSight.  Should really get varying census over time period, but these are a start.   
+
+Location codes and population numbers from FluSight. Should really get varying census over time period, but these are a start.
+
 ```{r warning=FALSE, message=FALSE}
 url <- "https://github.com/cdcepi/Flusight-forecast-data/raw/master/data-locations/locations.csv"
-filename <- "D:/Github/flusion_model/data/locations.csv"
+filename <- "D:/Github/flusion/data/locations.csv"
 
 download_file(url, filename)
 ```
 
-Read locations:  
+Read locations:
+
 ```{r}
-locations <- fread("D:/Github/flusion_model/data/locations.csv") %>%
+locations <- fread("D:/Github/flusion/data/locations.csv") %>%
   select(-c(count_rate1per100k, count_rate2per100k)) %>%
   filter(location_name != "US") #remove aggregate group
 
 head(locations)
 ```
 
+# Template
 
-#  Template
-Ensure all locations and times are represented in the analysis.  Missing data are plugged with NA. 
+Ensure all locations and times are represented in the analysis. Missing data are plugged with NA.
 
-## Dates and Locations  
+## Dates and Locations
+
 ```{r}
 myYears <- seq(2010, 2023, by = 1)
 week_nums <- 1:52
@@ -324,14 +340,17 @@ unique(duplicated(template))
 ```
 
 ## Reduce for Testing
+
 Running the analysis from 2010 through 2023-Epiweek-22.
+
 ```{r}
 template <- template %>% filter(year >= 2010)
 ```
 
+## Time Steps
 
-## Time Steps  
-An index with sequential timesteps.  
+An index with sequential timesteps.
+
 ```{r}
 template <- template %>%
   arrange(year, epiweek) %>%
@@ -342,16 +361,19 @@ range(template$ts_week) #number of epiweeks
 ```
 
 # Spatial Domian
-Need to setup directories to use **CovidCAR** functions.  Values here are arbitrary (need to add option to bypass to CovidCAR)
+
+Need to setup directories to use **CovidCAR** functions. Values here are arbitrary (need to add option to bypass to CovidCAR)
+
 ```{r warning=FALSE, message=FALSE}
 setup_analysis(report_date = "2010-01-01", 
                training_period = 2*28, #days
                forecast_horizon = 28, #days
-               output_dir = "D:/Github/flusion_model/data"
+               output_dir = "D:/Github/flusion/data"
 )
 ```
 
-## Get Geographic Boundaries  
+## Get Geographic Boundaries
+
 ```{r message=FALSE, warning=FALSE}
 States <- download_boundaries(unit = "state")
 class(States)
@@ -360,6 +382,7 @@ head(States@data[,c("Region", "State")]) #appended attributes
 ```
 
 ## Adjacency
+
 ```{r warning=FALSE, message=FALSE, fig.width=8,fig.height=6}
 nb_flusion = get_neighbors(States, connect=TRUE)
 summary(nb_flusion)
@@ -373,6 +396,7 @@ J = inla.read.graph("J")
 ```
 
 ## Template Spatial Index
+
 ```{r}
 template$Region =  with(States@data[,c("Region", "State")],
                        Region[match(
@@ -380,8 +404,10 @@ template$Region =  with(States@data[,c("Region", "State")],
                                  State)])
 ```
 
-## Add Entire Network  
-Getting the flue weeklyrate from FluSurv.  Not that this is only the time trend from FluSurv and is not loaction specific.     
+## Add Entire Network
+
+Getting the flue weeklyrate from FluSurv. Not that this is only the time trend from FluSurv and is not loaction specific.
+
 ```{r warning=FALSE, message=FALSE}
 en_match <- flusurv_en %>%
   group_by(year, epiweek) %>%
@@ -399,16 +425,19 @@ template <- left_join(template, en_match, by = c("year", "epiweek"))
 unique(duplicated(template))
 ```
 
-## Space-Time Interaction Index  
-May not be used, but including with Template just in case.  
+## Space-Time Interaction Index
+
+May not be used, but including with Template just in case.
+
 ```{r}
 template$st_int <- as.integer(as.factor(paste0(template$Region, ".", template$ts_week)))
 range(template$st_int)
 ```
 
+# Join to Disease Data
 
-# Join to Disease Data    
-Join observation data to the template.  Times and locations without observations are coded as NA.  
+Join observation data to the template. Times and locations without observations are coded as NA.
+
 ```{r}
 #FluSurv
 flusurv_full <- left_join(template, flusurv, by = c("location_name", "year", "epiweek")) 
@@ -433,9 +462,10 @@ unique(duplicated(nrevss_full))
 head(nrevss_full)
 ```
 
+## View Coverage
 
-## View Coverage   
-Looking at holes in the data.  Not interested in exact values, only comparing data coverage.  
+Looking at holes in the data. Not interested in exact values, only comparing data coverage.
+
 ```{r fig.width=8, fig.height=8}
 fs_plt <- flusurv_full %>% 
   mutate(value = weeklyrate.s,
@@ -493,6 +523,7 @@ theme(panel.grid.minor = element_blank(),
       plot.title = element_text(size=18, face="bold", hjust=0.5)) +
 guides(color = guide_legend(title.position = "top", label.position = "bottom"))
 ```
+
 ```{r warning=FALSE, message=FALSE,echo=FALSE}
 #save(list=c("nrevss_full", "J", "ilinet_full", "flu_HHS_full"), file="./data/prepro_06072023.RData", version = 2)
 ```
