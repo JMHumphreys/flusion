@@ -20,12 +20,11 @@ editor_options:
 ---
 
 <div>
-
 # Welcome to f(l)usion
  
 Work in progress!
 
 ### Download *f(l)usion* Data
-**f(l)usion v.1** (*2kb, csv*)       {{< downloadthis flusion/test_flusion_v1.csv dname=flusionv1 label="Download Data" icon=download type=info class=data-button >}}
+**f(l)usion v.1** (*2kb, csv*)       {{< downloadthis flusion/test_flusion_v1.csv dname=flusion-v1 label="Download Data" icon=download type=info class=data-button >}}
 
 <div>
