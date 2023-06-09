@@ -1,7 +1,7 @@
 {
-  "hash": "f60145ba5f8992f4370d299b8907aea8",
+  "hash": "44fbf394f8b1337c87df5d553c26407d",
   "result": {
-    "markdown": "---\ntitle: \"Model Results\"\ndescription: \"Import and wrangle mutlisourced influenza observations\"\nformat:\n  html:\n    df-print: kable\n    code-fold: show\n    code-summary: \"Hide code\"\n    code-overflow: wrap\n    toc-title: Page Contents\n    toc: true\n    toc-depth: 2\n    toc-location: right\n    number-sections: false\n    html-math-method: katex\n    css: styles.css\n    theme: flatly\n    smooth-scroll: true\neditor_options: \n  chunk_output_type: console\n---\n\n<style type=\"text/css\">\n\nbody, td {\n   font-size: 13pt;\n}\ncode.r{\n  font-size: 9pt;\n}\npre {\n  font-size: 11pt\n}\n</style>\n\n# Preliminaries  \nSetup working environment and loading necessary packages.\n  \n## Libraries\n\n::: {.cell}\n\n:::\n\n\n# Observation Data\n## FluSurv  \n\n\n",
+    "markdown": "---\ntitle: \"Model Results\"\ndescription: \"Import and wrangle mutlisourced influenza observations\"\nformat:\n  html:\n    df-print: kable\n    code-fold: show\n    code-summary: \"Hide code\"\n    code-overflow: wrap\n    toc-title: Page Contents\n    toc: true\n    toc-depth: 2\n    toc-location: right\n    number-sections: false\n    html-math-method: katex\n    css: styles.css\n    theme: flatly\n    smooth-scroll: true\neditor_options: \n  chunk_output_type: console\n---\n\n```{=html}\n<style type=\"text/css\">\n\nbody, td {\n   font-size: 13pt;\n}\ncode.r{\n  font-size: 9pt;\n}\npre {\n  font-size: 11pt\n}\n</style>\n```\n\n# Preliminaries\n\nSetup working environment and loading necessary packages.\n\n## Libraries\n \n\n::: {.cell}\n\n:::\n\n\n# Observation Data\n\n## FluSurv\n",
     "supporting": [
       "results_files"
     ],
