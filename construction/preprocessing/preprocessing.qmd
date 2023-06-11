@@ -193,7 +193,7 @@ ilinet <- ilinet(region = "state") %>%
   select(location_name, year, epiweek, unweighted, unweighted.s, total, providers)
 
 # Clip to between 0.0001 and 99.999
-ilinet$unweighted.s <- pmin(pmax(as.numeric(ilinet$unweighted.s), 0.0001), 99.9999)/100
+ilinet$unweighted.s <- pmin(pmax(as.numeric(ilinet$unweighted.s), 0.01), 99.99)/100
 
 # logit transform 
 ilinet$unweighted.s <- log(ilinet$unweighted.s/(1-ilinet$unweighted.s))
@@ -270,7 +270,7 @@ nrevss <- rbind(nrevss.1, nrevss.2)
 nrevss$Apos[nrevss$Apos == "X"] <- NA
 
 # Clip to between 0.0001 and 99.999
-nrevss$Apos <- pmin(pmax(as.numeric(nrevss$Apos), 0.0001), 99.9999)/100
+nrevss$Apos <- pmin(pmax(as.numeric(nrevss$Apos), 0.01), 99.99)/100
 
 # logit transform 
 nrevss$Apos.s <- log(nrevss$Apos/(1-nrevss$Apos))
@@ -328,29 +328,25 @@ template <- do.call(rbind, year_set)
 dim(template)
 head(template) #all states and times represented
 
+
+first_record <- min(subset(nrevss, year == 2010)$epiweek) #drop before nrevss data was collected
+template$drop_old <- ifelse(template$year == 2010 & template$epiweek < first_record, "drop", "keep")
+
 #most_recent <- max(subset(flu_HHS, year == 2023)$epiweek) #drop future dates
-most_recent <- 22 #models were initiall fit with 2023-Epiweek-22
-template$keep <- ifelse(template$year == 2023 & template$epiweek > most_recent, "drop", "keep")
+most_recent <- 22 #date available when model run
+template$drop_new <- ifelse(template$year == 2023 & template$epiweek > most_recent, "drop", "keep")
 
 template <- template %>% 
-  filter(keep == "keep") %>%
-  select(-keep)
+  filter(drop_old == "keep" &
+         drop_new == "keep") %>%
+  select(-c(drop_old, drop_new))
 
 unique(duplicated(template))
-```
-
-## Reduce for Testing
-
-Running the analysis from 2010 through 2023-Epiweek-22.
-
-```{r}
-template <- template %>% filter(year >= 2010)
 ```
 
 ## Time Steps
 
 An index with sequential timesteps.
-
 ```{r}
 template <- template %>%
   arrange(year, epiweek) %>%
@@ -415,7 +411,7 @@ en_match <- flusurv_en %>%
   select(year, epiweek, en_est)
 
 # Clip to between 0.0001 and 99.999
-en_match$en_est.s <- pmin(pmax(as.numeric(en_match$en_est), 0.0001), 99.9999)/100
+en_match$en_est.s <- pmin(pmax(as.numeric(en_match$en_est), 0.01), 99.99)/100
 
 # logit transform 
 en_match$en_est.s <- round(log(en_match$en_est.s/(1-en_match$en_est.s)), 3)
@@ -427,8 +423,7 @@ unique(duplicated(template))
 
 ## Space-Time Interaction Index
 
-May not be used, but including with Template just in case.
-
+All location-time combinations.  
 ```{r}
 template$st_int <- as.integer(as.factor(paste0(template$Region, ".", template$ts_week)))
 range(template$st_int)

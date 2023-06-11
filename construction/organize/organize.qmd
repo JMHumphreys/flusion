@@ -107,6 +107,7 @@ ili.lst = list(list(intercept1 = rep(1, dim(ilinet_full)[1])), #custom intercept
                year.ili.2 = ilinet_full[,"year.ili.2"],
                year.ili.3 = ilinet_full[,"year.ili.3"],
                ts_week = ilinet_full[,"ts_week.1.ili"],
+               ts_week.fs = ilinet_full[,"ts_week.1.ili"],
                ts_week.iid = ilinet_full[,"ts_week.1.ili"],
                ts_week.1.ili = ilinet_full[,"ts_week.1.ili"],
                ts_week.2.ili = ilinet_full[,"ts_week.2.ili"],
@@ -161,6 +162,7 @@ nv.lst = list(list(intercept2 = rep(1, dim(nrevss_full)[1])), # custom intercept
                year.nv.2 = nrevss_full[,"year.nv.2"],
                year.nv.3 = nrevss_full[,"year.nv.3"],
                ts_week = nrevss_full[,"ts_week.1.nv"],
+               ts_week.fs = nrevss_full[,"ts_week.1.nv"],
                ts_week.iid = nrevss_full[,"ts_week.1.nv"],
                ts_week.1.nv = nrevss_full[,"ts_week.1.nv"],
                ts_week.2.nv = nrevss_full[,"ts_week.2.nv"],
@@ -174,6 +176,7 @@ nv.lst = list(list(intercept2 = rep(1, dim(nrevss_full)[1])), # custom intercept
                Region.3.nv = nrevss_full[,"Region.3.nv"],
                Region.4.nv = nrevss_full[,"Region.4.nv"],
                st_int = nrevss_full[,"st_int"],
+               st_int.nv = nrevss_full[,"st_int"],
                state.nv = nrevss_full[,"state.nv"],
                dsource = nrevss_full[,"source"]))
 
@@ -188,7 +191,6 @@ nv.stk = inla.stack(data = list(Y = cbind(NA, nrevss_full$y_nrvs, NA)), #NA in t
 ## HHS Set
 
 Much the same as the ILI and NREVVS DataStacks.
-
 ```{r warning=FALSE}
 flu_HHS_full <- as.data.frame(flu_HHS_full) %>%
   mutate(y_hhs = log(hosp_inc+0.0001), #log hospital incidence (response variable)
@@ -215,6 +217,7 @@ hhs.lst = list(list(intercept3 = rep(1, dim(flu_HHS_full)[1])),
                year.hhs.1 = flu_HHS_full[,"year.hhs"],
                year.hhs.2 = flu_HHS_full[,"year.hhs"],
                year.hhs.3 = flu_HHS_full[,"year.hhs"],
+               ts_week.fs = flu_HHS_full[,"ts_week.1.hhs"],
                ts_week.c = flu_HHS_full[,"ts_week.1.hhs"],
                ts_week.iid.c = flu_HHS_full[,"ts_week.1.hhs"],
                ts_week.1.hhs = flu_HHS_full[,"ts_week.1.hhs"],
@@ -241,8 +244,7 @@ hhs.stk = inla.stack(data = list(Y = cbind(NA, NA, flu_HHS_full$y_hhs)), #NAs fo
 
 ## Join Datastacks
 
-Joining all three above DataStacks to a common object, joint DataStack. This is all the data needed for running the model.
-
+Joining all three above DataStacks to a common object, joint DataStack. This is all the data needed for running the model.  
 ```{r}
 joint_stack <- inla.stack(ili.stk, nv.stk, hhs.stk)
 ```

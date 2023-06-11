@@ -66,6 +66,8 @@ ul.task-list li input[type="checkbox"] {
 
 
 <link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="Explore f(l)usion">
+<meta property="og:description" content="Constructing formula and running the model.">
 </head>
 
 <body class="nav-sidebar floating">
@@ -85,7 +87,7 @@ ul.task-list li input[type="checkbox"] {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
 <!-- sidebar -->
   <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto">
-    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="pt-lg-2 mt-2 text-center sidebar-header">
       <a href="./index.html" class="sidebar-logo-link">
       <img src="./images/flusion.png" alt="" class="sidebar-logo py-0 d-lg-inline d-none">
       </a>
@@ -93,12 +95,12 @@ ul.task-list li input[type="checkbox"] {
     <a href="" title="" id="sidebar-tool-dropdown-0" class="sidebar-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-github"></i></a>
     <ul class="dropdown-menu" aria-labelledby="sidebar-tool-dropdown-0">
         <li>
-          <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/JMHumphreys/flusion_model">
+          <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/JMHumphreys/flusion">
           Source Code
           </a>
         </li>
         <li>
-          <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/JMHumphreys/flusion_model/issues">
+          <a class="dropdown-item sidebar-tools-main-item" href="https://github.com/JMHumphreys/flusion/issues">
           Report a Bug
           </a>
         </li>
@@ -123,7 +125,7 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./index.html" class="sidebar-item-text sidebar-link">Flusions greetings</a>
+  <a href="./index.html" class="sidebar-item-text sidebar-link">Welcome to f(l)usion</a>
   </div>
 </li>
       </ul>
@@ -466,7 +468,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
+      var filterRegex = new RegExp(/https:\/\/jmhumphreys\.github\.io\/flusion\//);
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href);
     }
@@ -486,7 +488,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
       <a href="./index.html" class="pagination-link">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Flusions greetings</span>
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Welcome to f(l)usion</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
@@ -496,7 +498,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <footer class="footer">
   <div class="nav-footer">
     <div class="nav-footer-left">Published with <a href="https://quarto.org/">Quarto</a> v1.2.335</div>   
-    <div class="nav-footer-right">© 2023 <a href="./about">John Humphreys</a> | <a href="./license">MIT License</a></div>
+    <div class="nav-footer-right">© 2023 | <a href="./license">MIT License</a></div>
   </div>
 </footer>
 

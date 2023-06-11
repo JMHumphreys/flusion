@@ -1,6 +1,6 @@
 ---
 title: "Model Results"
-description: "Import and wrangle mutlisourced influenza observations"
+description: "Model diagnostics and parameter interpretation"
 format:
   html:
     df-print: kable
@@ -34,48 +34,5 @@ pre {
 }
 </style>
 ```
-# Preliminaries
 
-Setup working environment and loading necessary packages.
-
-## Libraries
- 
-```{r warning=FALSE, message=FALSE,echo=FALSE}
-#wrangling
-library(tidyverse)
-library(lubridate)
-library(data.table, include.only = "fread")
-library(cdcfluview)
-library(yaml)
-
-#spatial
-library(sp)
-library(sf)
-library(spdep)
-library(rgeos)
-library(igraph)
-library(maptools)
-library(mapproj)
-library(CovidCAR)
-#devtools::install_github("JMHumphreys/CovidCAR")
-
-#messages
-library(cli)
-
-#inference
-library(INLA)
-
-#Utilities
-#source("./R/utilities.R")
-
-options(dplyr.summarise.inform = FALSE)
-
-#function
-download_file <- function(url, filename) {
-  download.file(url, destfile = filename, method = "auto", quiet = FALSE, mode = "wb")
-}
-```
-
-# Observation Data
-
-## FluSurv
+#Work in progress

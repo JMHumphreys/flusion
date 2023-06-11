@@ -72,33 +72,36 @@ load("D:/Github/flusion/data/dstacks_06072023.RData")
 ```
 
 # Prior Specifications
- 
 ```{r}
-#PC Prior
-pcprior1 = list(prec = list(prior="pc.prec", param = c(1, 0.001)))
+inla.setOption(inla.mode= "experimental")
 
-#bym prior
-bym_hyper <- list(phi = list(prior = "pc", 
-                      param = c(0.5, 0.5)), 
-               prec = list(prior = "pc.prec", 
-                       param = c(1, 0.01)))  
+#Besag-Mollie-York
+bym_hyper <- list(
+    prec = list(
+        initial = 2, 
+        prior = "pc.prec",
+        param = c(0.6, 0.01)),
+    phi = list(
+        initial = 2, 
+        prior = "pc",
+        param = c(0.5, 0.5)))
 
 #iid prior
 pc_prec_iid <- list(theta = list(prior="pc.prec", 
-                                 param=c(0.5, 0.01)))
+                                 param=c(1, 0.01)))
 
 #ar1 prior
 pc_cor_ar1 <- list(theta = list(prior = 'pccor1', 
-                                param = c(0.5, 0.5)))
+                                param = c(0.7, 0.5)))
 
-#rw2 prior
-pc_rw <- list(prec=list(prior="pc.prec", 
-                        param=c(0.5,0.01)))
+#rw prior
+pcprior1 = list(prec = list(prior="pc.prec", 
+                            param = c(1, 0.01)))
+
 ```
 
-# Joint Model Formula
-
-```{r eval=FALSE}
+# Joint Model Formula  
+```{r}
 Frm.1 = Y ~ -1 + intercept1 + #intercept for ILI submodel
                  intercept2 + #intercept for NREVSS submodel
                  intercept3 + #intercept for HHS submodel
@@ -154,21 +157,33 @@ Frm.1 = Y ~ -1 + intercept1 + #intercept for ILI submodel
                       f(ts_week.iid.c,      #  copy IID extra-seasonal effect to HHS submodel
                          copy = "ts_week.2.nv",
                          fixed=FALSE) +
-                      f(en_est.s,          # perform order-1random walk across all levels based         
+                      f(ts_week.fs, en_est.s, # perform order-2 random walk across all levels based         
                          constr=TRUE,      # on the temporal pattern exhibited by the FluSurv data
                          scale.model = TRUE,
-                         model="rw1",
-                         hyper=pc_rw)
+                         model="rw2",
+                         hyper=pcprior1) +
+                     f(st_int.nv,         #NREVSS space-time interaction (location-week)      
+                        constr=TRUE,
+                        model="iid",
+                        hyper=pc_prec_iid) +
+                     f(st_int.c,          #copy NREVSS space-time interaction to HHS level
+                        copy = "st_int.nv",
+                        fixed=FALSE)
+```
 
+# Hyperparameter Estimates  
+Mean estimates for all 22 model hyperparameters.  These were estimated in advance by running a smaller, 5yr model.
+```{r}
+theta8 = c(0.681697728, -0.492510866, -2.058167639, 0.006865191, -1.002600890, 2.926536468, -0.321834109, 0.153080825, 1.959042282,
+           -1.832427192, -1.118539999, 1.942998892, 3.403507238, -1.016877442, -3.634452225, -0.407023837, -0.023686173,
+           0.529309680, 0.332056118, 0.999033065, 0.857719181, 0.528751714)
+```
 
-# Mean estimates for all 20 model parameters.  These were estimated by running a smaller, 5yr model. 
-# By providing these initial values, model run times can be accelerated and get better "convergence" (equivalent of)
-theta5 = c(-0.56686743, -2.10828061, -1.95713241,  0.06579743, -0.09814683,  2.61967616, -1.27387472,  0.19664533,  1.81029996,
-           -1.92052717, -0.69497717,  2.20580332,  5.19657440, -2.17964335, -2.24216194, -0.12524395,  0.60062266,  0.20796619,
-           0.63707468,  0.49558648)
+# Run Model 
+```{r eval=FALSE}
 
 Joint.mod = inla(Frm.1, #formula from above
-      				 #num.threads = 8,
+      				 num.threads = 8, #cores to use
       				 data = inla.stack.data(joint_stack), # combined DataStack with substacks for all submodels
       				 family = c("gaussian", "gaussian","gaussian"), #responses are normal
       				 verbose = TRUE, # print run process to screen
@@ -178,11 +193,11 @@ Joint.mod = inla(Frm.1, #formula from above
       											 A = inla.stack.A(joint_stack), 
       									 compute = TRUE, # include fitted values
       										  link = 1), #default link function settings
-      				 control.mode = list(restart = TRUE, theta = theta5), #initial values above
+      				 control.mode = list(restart = TRUE, theta = theta8), #initial values above
       				 control.inla = list(strategy="gaussian", #strategy to speed up
       											       int.strategy = "eb"), #empirical Bayes (based on modes)
       				 control.compute=list(dic = F, cpo = F, waic = F)) # these just slow the run down
 
 #save resulting model and inputs  
-#save(list=c("Joint.mod", "J", "joint_stack"), file="./runs/initial6.RData", version = 2)
+#save(list=c("Joint.mod", "J", "joint_stack"), file="./data/runs/model-2023-06-09.RData", version = 2)
 ```
