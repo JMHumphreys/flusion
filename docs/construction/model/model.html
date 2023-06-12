@@ -128,6 +128,22 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
 
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.css">
 
 <link rel="stylesheet" href="styles.css">
 <meta property="og:title" content="Model Inference">
@@ -189,7 +205,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../index.html" class="sidebar-item-text sidebar-link">Welcome to f(l)usion</a>
+  <a href="../../index.html" class="sidebar-item-text sidebar-link">Welcome</a>
   </div>
 </li>
       </ul>
@@ -249,7 +265,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <h2 id="toc-title">Page Contents</h2>
    
   <ul class="collapse">
-  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a>
+  <ul class="collapse">
+  <li><a href="#model" id="toc-model" class="nav-link" data-scroll-target="#model">Model</a></li>
+  </ul></li>
   <li><a href="#prior-specifications" id="toc-prior-specifications" class="nav-link" data-scroll-target="#prior-specifications">Prior Specifications</a></li>
   <li><a href="#joint-model-formula" id="toc-joint-model-formula" class="nav-link" data-scroll-target="#joint-model-formula">Joint Model Formula</a></li>
   <li><a href="#hyperparameter-estimates" id="toc-hyperparameter-estimates" class="nav-link" data-scroll-target="#hyperparameter-estimates">Hyperparameter Estimates</a></li>
@@ -298,9 +317,58 @@ pre {
 <h1>Overview</h1>
 <p>Having completed data preprocessing and data organization, a formula is constructed and the model run.</p>
 <p><strong>Note:</strong> This script requires that both the data <a href="https://jmhumphreys.github.io/flusion/construction/preprocessing/preprocessing.html"><strong>Preprocessing</strong></a> and the <a href="https://jmhumphreys.github.io/flusion/construction/organize/organize.html"><strong>Data Organization</strong></a> have already been completed with all resulting objects available in the working environment.</p>
+<section id="model" class="level2">
+<h2 class="anchored" data-anchor-id="model">Model</h2>
+<p><span class="math display">\begin{align}
+\textit{y}_{1\textit{st}}  &amp;= \beta_0 + \beta_1{Pop} + \varphi_{\textit{t}} + \textit{W}_1(\textit{st}) \nonumber \\
+\textit{y}_{2\textit{st}}|\textit{y}_{1\textit{st}}  &amp;= \beta_0 + \beta_2{Pop} + \gamma_{seas} + \varphi_{\textit{t}} +\delta_{\textit{st}} + \textit{W}_2(\textit{st}) + \alpha_1 \cdot \textit{W}_1(\textit{st}) \nonumber \\
+\textit{y}_{3\textit{st}}|\textit{y}_{1\textit{st}}, \textit{y}_{2\textit{st}}  &amp;= \beta_0 + \beta_3{Pop} + \varphi_{\textit{t}} + \alpha_2 \cdot \gamma_{seas} + \alpha_3 \cdot \textit{W}_1(\textit{st}) + \alpha_4 \cdot \delta_{\textit{st}} + \alpha_5 \cdot \textit{W}_2(\textit{st}) + \textit{W}_3(\textit{st}) \nonumber \\
+\nonumber
+\end{align}</span></p>
+<section id="where" class="level4">
+<h4 class="anchored" data-anchor-id="where">Where,</h4>
+<ul>
+<li><span class="math inline">\textit{s} (\textit{s} = 1, 2, 3, \ldots,56)</span> are U.S. States and Territories<br>
+</li>
+<li><span class="math inline">\textit{t}</span> are time steps (yearly for spatial effects (<span class="math inline">\textit{W}_(\textit{st})</span>)<br>
+</li>
+<li><span class="math inline">\textit{y}_{1\textit{st}}</span> is the percent infected from the ILI data set (Level 1)<br>
+</li>
+<li><span class="math inline">\textit{y}_{2\textit{st}}</span> is the percent confirmed positive Influenza A from NREVSS (Level 2)<br>
+</li>
+<li><span class="math inline">\textit{y}_{3\textit{st}}</span> is hospital incidence from HHS (Level 3)<br>
+</li>
+<li><span class="math inline">\beta_0</span>’s are level-specific intercepts<br>
+</li>
+<li><span class="math inline">\beta_2{Pop}</span> are level-specific population estimates for each state<br>
+</li>
+<li><span class="math inline">\textit{W}_(\textit{st})</span> are BYM space-time effects specific to each level (1,2,3)<br>
+</li>
+<li><span class="math inline">\gamma_{seas}</span> is a week-based seasonal effect estimated from NREVSS<br>
+</li>
+<li><span class="math inline">\delta_{\textit{st}}</span> is a space-time interaction (STI) term estimated from NREVSS<br>
+</li>
+<li><span class="math inline">\varphi_{\textit{t}}</span> is a second-order random walk estimated from FluSurv data</li>
+</ul>
+</section>
+<section id="in-addition-there-are-a-number-of-interaction-effects-to-scale-shared-components" class="level3">
+<h3 class="anchored" data-anchor-id="in-addition-there-are-a-number-of-interaction-effects-to-scale-shared-components">In addition, there are a number of interaction effects to scale shared components,</h3>
+<ul>
+<li><span class="math inline">\alpha_1</span> quantifies interaction between the ILI spatial effect (<span class="math inline">\textit{W}_1(\textit{st}</span>) and NREVSS<br>
+</li>
+<li><span class="math inline">\alpha_2</span> quantifies interaction between the NREVSS seasonal effect (<span class="math inline">\gamma_{seas}</span>) and HHS data<br>
+</li>
+<li><span class="math inline">\alpha_3</span> quantifies interaction between the ILI spatial effect (<span class="math inline">\textit{W}_1(\textit{st}</span>) and NREVSS<br>
+</li>
+<li><span class="math inline">\alpha_4</span> quantifies interaction between the NREVSS STI effect (<span class="math inline">\delta_{\textit{st}}</span>) and HHS<br>
+</li>
+<li><span class="math inline">\alpha_5</span> quantifies interaction between the NREVSS spatial effect (<span class="math inline">\textit{W}_2(\textit{st}</span>) and HHS</li>
+</ul>
 <div class="cell">
 
 </div>
+</section>
+</section>
 </section>
 <section id="prior-specifications" class="level1">
 <h1>Prior Specifications</h1>
