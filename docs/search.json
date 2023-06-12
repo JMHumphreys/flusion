@@ -179,6 +179,6 @@
     "href": "explain.html#whats-it-good-for",
     "title": "What is flusion?",
     "section": "What’s it good for?",
-    "text": "What’s it good for?\nFlusion is intended to provide a complete and continuous source of data to train and support influenza forecasting modeling. It is an analytic product to support other analytic products.\n\n\n\nIn a picture"
+    "text": "What’s it good for?\nFlusion is intended to provide a complete and continuous source of data to train and support influenza forecasting modeling. It is an analytic product to support other analytic products.\n\n\n\nFlusion in a snapshot: Arrows represent how information is passed between data-specific submodels"
   }
 ]

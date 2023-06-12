@@ -27,4 +27,4 @@ f(l)usion is a data set that provides estimates for hospitalizations that result
 Flusion is intended to provide a complete and continuous source of data to train and support influenza forecasting modeling.  It is an analytic product to support other analytic products.  
 
 
-![**In a picture**](images/share.png){width=890%}
+![**Flusion in a snapshot:**  Arrows represent how information is passed between data-specific submodels](images/share.png){width=890%}
