@@ -35,19 +35,12 @@ pre {
 </style>
 ```
 
-# Model Diagnostics and Parameter Estimates 
+## Model Diagnostics and Parameter Estimates 
 
 
-<<<<<<< HEAD
-![matrix](https://github.com/JMHumphreys/flusion/blob/main/images/matrix.png){width=300}
-
-
-
-![lines](https://github.com/JMHumphreys/flusion/blob/main/images/lines.png){width=300}
-=======
-![matrix]([images/matrix.png](https://github.com/JMHumphreys/flusion/blob/main/images/matrix.png)){width=300}
+![**Compare model inputs and outputs**](matrix.png){width=890%}
 
 
 
-![lines]([images/lines.png](https://github.com/JMHumphreys/flusion/blob/main/images/lines.png)){width=300}
->>>>>>> 98ca6a31c1b2cf18a9ad6179d3b9062c49dabb82
+
+![**National Totals**](lines.png){width=90%}
