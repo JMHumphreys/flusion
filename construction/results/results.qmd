@@ -38,8 +38,8 @@ pre {
 # Model Diagnostics and Parameter Estimates 
 
 
-![matrix](images/matrix.png){width=300}
+![matrix](https://github.com/JMHumphreys/flusion/blob/main/images/matrix.png){width=300}
 
 
 
-![lines](images/lines.png){width=300}
+![lines](https://github.com/JMHumphreys/flusion/blob/main/images/lines.png){width=300}
