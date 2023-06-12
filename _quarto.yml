@@ -26,6 +26,7 @@ website:
       - section: "Overview"
         contents:
           - index.qmd
+          - explain.qmd 
       - section: "Explore the Data"
         contents:
           - explore.qmd

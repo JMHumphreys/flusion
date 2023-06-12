@@ -1,6 +1,6 @@
 ---
-title: "Explore f(l)usion"
-description: "Constructing formula and running the model."
+title: "Explore the Data"
+description: "Data set description."
 format:
   html:
     df-print: kable
