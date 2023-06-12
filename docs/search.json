@@ -123,7 +123,7 @@
     "href": "cons_index.html",
     "title": "f(l)usion Workflow",
     "section": "",
-    "text": "Construction\n\nScripts showing major steps steps in f(l)usion model development.\n\n\n\n\n\n\n\n\n   \n     \n     \n       Order By\n       Default\n         \n          Date - Oldest\n        \n         \n          Date - Newest\n        \n         \n          Updated - Oldest\n        \n         \n          Updated - Newest\n        \n     \n  \n\n\n\n\n\n\n\nModel Inference\n\n\n13 min\n\n\nConstructing formula and running the model.\n\n\n\n\nJun 11, 2023\n\n\n\n\n\n\n\n\n\n\nData Organization\n\n\n12 min\n\n\nFormatting data as list() objects and DataStacks for model input.\n\n\n\n\nJun 11, 2023\n\n\n\n\n\n\n\n\n\n\nPreprocessing\n\n\n10 min\n\n\nImport and wrangle mutlisourced influenza observations\n\n\n\n\nJun 11, 2023\n\n\n\n\n\n\n\n\n\n\nModel Results\n\n\n0 min\n\n\nModel diagnostics and parameter interpretation\n\n\n\n\nJun 9, 2023\n\n\n\n\n\n\n\nNo matching items"
+    "text": "Construction\n\nScripts showing major steps steps in f(l)usion model development.\n\n\n\n\n\n\n\n\n   \n     \n     \n       Order By\n       Default\n         \n          Date - Oldest\n        \n         \n          Date - Newest\n        \n         \n          Updated - Oldest\n        \n         \n          Updated - Newest\n        \n     \n  \n\n\n\n\n\n\n\nModel Inference\n\n\n13 min\n\n\nConstructing formula and running the model.\n\n\n\n\nJun 11, 2023\n\n\n\n\n\n\n\n\n\n\nData Organization\n\n\n12 min\n\n\nFormatting data as list() objects and DataStacks for model input.\n\n\n\n\nJun 11, 2023\n\n\n\n\n\n\n\n\n\n\nPreprocessing\n\n\n10 min\n\n\nImport and wrangle mutlisourced influenza observations\n\n\n\n\nJun 11, 2023\n\n\n\n\n\n\n\n\n\n\nModel Results\n\n\n0 min\n\n\nModel diagnostics and parameter interpretation\n\n\n\n\nJun 11, 2023\n\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "about.html",
@@ -144,7 +144,7 @@
     "href": "construction/results/results.html",
     "title": "Model Results",
     "section": "",
-    "text": "#Work in progress"
+    "text": "Model Diagnostics and Parameter Estimates\n\n\n\nmatrix\n\n\n\n\n\nlines"
   },
   {
     "objectID": "construction/results/results.html#flusurv",

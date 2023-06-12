@@ -35,4 +35,11 @@ pre {
 </style>
 ```
 
-#Work in progress
+# Model Diagnostics and Parameter Estimates 
+
+
+![matrix](images/matrix.png){width=300}
+
+
+
+![lines](images/lines.png){width=300}
