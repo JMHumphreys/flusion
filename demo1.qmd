@@ -1,0 +1,291 @@
+---
+title: "Flu Season 2022-2023"  
+description: "Predicting flu season 2022-2023 using a randomwalk + trend model (non-spatial)"
+format:
+  html:
+    df-print: kable
+    code-fold: show
+    code-summary: "Hide code"
+    code-overflow: wrap
+    toc-title: Page Contents
+    toc: true
+    toc-depth: 2
+    toc-location: right
+    number-sections: true
+    html-math-method: katex
+    css: styles.css
+    theme: flatly
+    smooth-scroll: true
+editor_options: 
+  chunk_output_type: console
+---
+```{=html}
+<style type="text/css">
+
+body, td {
+   font-size: 13pt;
+}
+code.r{
+  font-size: 9pt;
+}
+pre {
+  font-size: 11pt
+}
+</style>
+```
+
+## Overview  
+This is a quick demonstration of using flusion data to forecast 2022-2023 influenza hospitalizations across all U.S. States and Territories.  The demo includes matching flusion to *truth* data from [FluSight](https://github.com/cdcepi/Flusight-forecast-data), constructing a non-spatial randomwalk model, and then comparing the predicted values to truth data.   
+     
+
+
+## Analysis Setup
+
+### Libraries
+Loading libraries.
+```{r warning=FALSE, message=FALSE}
+#wrangling
+library(tidyverse)
+library(lubridate)
+
+#inference
+library(INLA)
+#use adaptive search algorithm
+inla.setOption(inla.mode= "experimental")
+
+options(dplyr.summarise.inform = FALSE)
+```
+
+### Observation Data
+
+**flusion**
+```{r warning=FALSE, message=FALSE}
+#function to downlaod file
+get_data <- function(url) {
+  df <- read_csv(url)
+  return(df)
+}
+
+flusion_url <- "https://github.com/JMHumphreys/flusion/raw/main/flusion/flusion_v1.csv"
+flusion <- get_data(flusion_url)
+head(flusion)
+```
+
+**FluSight truth data**
+```{r warning=FALSE, message=FALSE}
+#FluSight: 2023-06-12
+flusight_url <- "https://github.com/cdcepi/Flusight-forecast-data/raw/master/data-truth/truth-Incident%20Hospitalizations.csv" 
+flusight_truth <- get_data(flusight_url)
+head(flusight_truth)
+```
+
+### Join Data
+```{r}
+range(flusion$date)
+range(flusight_truth$date) #1 week added since flusion.v1
+
+flusight_truth <- flusight_truth %>%
+  mutate(truth = value) %>%
+  select(date, location, truth)
+
+comb_data <- left_join(flusion, flusight_truth, by = c("date", "location"))
+
+comb_data <- comb_data %>%
+  mutate(ts_weeks = as.integer(as.factor(year + epiweek/52)))
+
+head(comb_data)
+tail(comb_data)
+```
+
+### Overlap Period  
+Quick plot to compare flusion estimates to FluSight truth.  
+```{r fig.width=8, fig.height=6}
+overlap_data <- comb_data %>%
+  filter(date >= min(flusight_truth$date) &
+         date <= max(flusight_truth$date))
+
+
+overlap_natl <- overlap_data %>%
+  group_by(date) %>%
+  summarise(flusion = sum(q_0.50),
+            truth = sum(truth, na.rm=T))
+
+overlap_natl <- reshape2::melt(overlap_natl, "date")
+
+ggplot(overlap_natl, aes(date, value)) +
+  geom_bar(stat="identity") +
+  facet_grid(rows = vars(variable)) +
+  scale_x_date(date_breaks = "6 month", date_labels = "%b-%Y") +
+  theme_classic() +
+  ylab("Hospitalizations") +
+  xlab(" ") +
+  theme_minimal() +
+  theme(plot.margin = unit(c(2,0.1,2,0.1), "cm"),
+        panel.grid.minor = element_line(color = "gray90", linewidth = 0.25, linetype = 1),
+        panel.grid.major = element_line(color = "gray60", linewidth = 0.5, linetype = 1),
+        panel.background = element_blank(),
+        plot.background = element_blank(),
+        strip.text = element_text(size=14, face="bold"),
+        strip.background = element_blank(),
+        legend.position="none",
+        legend.text = element_text(size=12, face="bold"),
+        legend.title = element_text(size=16, face="bold"),
+        axis.title.x =  element_text(size=16, face="bold"),
+        axis.title.y = element_text(size=16, face="bold"),
+        axis.text.x =  element_text(size=14, face="bold", angle=60, hjust=1),
+        axis.text.y = element_text(size=12, face="bold"),
+        plot.title = element_text(size=22, face="bold"))
+```
+
+
+## Training vs Testing
+Break data into testing and training sets.  Attempt to forecast the most recent flu season 2022-2033.  
+
+####Notes:   
++ **Y** is the target response variable in the demo model  
++ Dates between Oct 2022 through May 2023 as coded as unknown (NA)     
++ The demo model will attempt to predict the NA's  
+```{r}
+comb_data$Y <- ifelse(comb_data$year >= 2022 & comb_data$epiweek >= 40, NA, comb_data$q_0.50)
+```
+
+## Organize Data
+```{r}
+
+comb_data <- comb_data %>%
+  mutate(intercept = 1,   #intercept
+         Y = round(Y, 0)) #round to integer count data
+         
+# copy location index
+comb_data$Region.1 <- as.integer(comb_data$location)
+
+#copies of weekly time index
+comb_data$ts_weeks.1 <- comb_data$ts_weeks.2 <- comb_data$ts_weeks.3 <- comb_data$ts_weeks
+```
+
+
+## Model  
+```{r}
+#prior
+pc.prior = list(prec = list(prior="pc.prec", 
+                            param = c(1, 0.5)))
+
+#formula
+form.rw <- Y ~ -1 + intercept + #use custom intercept
+  f(ts_weeks.1,   #random walk + noise   
+    constr=TRUE,
+    model="rw2",
+    hyper=pc.prior) +
+  f(ts_weeks.2,  #extra variation outside of rw time and linear trends     
+    constr=TRUE,
+    model="iid",
+    hyper=pc.prior) +
+  f(Region.1, #state-level variation          
+    constr=TRUE,
+    model="iid",
+    hyper=pc.prior) +
+  ts_weeks.3    # linear trend
+
+#run model
+
+rw.mod = inla(form.rw, #formula
+      				 data = comb_data, #data 
+      				 family = c("nbinomial"), #negative binomial
+      				 verbose = FALSE, 
+      				 quantiles = c(0.05, 0.25, 0.5, 0.75, 0.95),
+      				 control.fixed = list(prec = 1, 
+      									  prec.intercept = 1), 
+      				 control.predictor = list(
+      									compute = TRUE, 
+      										  link = 1), 
+      				 control.inla = list(strategy="adaptive", 
+      											       int.strategy = "eb"), 
+      				 control.compute=list(dic = F, cpo = F, waic = F))
+
+```
+
+## National Prediction 
+The bar chart indicates truth, solid line is the predicted 0.5 quantile, and shaded bands provide the 95 credible interval.   
+```{r fig.width=8, fig.height=6}
+model_out <- rw.mod$summary.fitted.values[,c(3:7)]
+names(model_out) <- c("q0.05", "q0.25", "q0.5", "q0.75", "q0.95")
+
+comb_data_pred <- cbind(comb_data, model_out)
+
+rw_natl <- comb_data_pred %>%
+  filter(is.na(Y) == TRUE) %>%
+  group_by(date) %>%
+  summarise(Q0.05 = sum(q0.05),
+            Q0.25 = sum(q0.25),
+            Q0.5 = sum(q0.5),
+            Q0.75 = sum(q0.75),
+            Q0.95 = sum(q0.95),
+            truth = sum(truth, na.rm=T))
+
+
+ggplot(rw_natl, aes(date, truth)) +
+  geom_bar(stat="identity", fill="tan") +
+  geom_ribbon(aes(ymin=Q0.05, ymax=Q0.95),fill="steelblue", alpha = 0.3) +
+  geom_ribbon(aes(ymin=Q0.25, ymax=Q0.75),fill="steelblue", alpha = 0.5) +
+  geom_line(data=rw_natl,
+            aes(date, Q0.5)) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b-%Y") +
+  theme_classic() +
+  ylab("Hospitalizations") +
+  xlab(" ") +
+  theme_minimal() +
+  theme(plot.margin = unit(c(2,0.1,2,0.1), "cm"),
+        panel.grid.minor = element_line(color = "gray90", linewidth = 0.25, linetype = 1),
+        panel.grid.major = element_line(color = "gray60", linewidth = 0.5, linetype = 1),
+        panel.background = element_blank(),
+        plot.background = element_blank(),
+        strip.text = element_text(size=14, face="bold"),
+        strip.background = element_blank(),
+        legend.position="none",
+        legend.text = element_text(size=12, face="bold"),
+        legend.title = element_text(size=16, face="bold"),
+        axis.title.x =  element_text(size=16, face="bold"),
+        axis.title.y = element_text(size=16, face="bold"),
+        axis.text.x =  element_text(size=14, face="bold", angle=60, hjust=1),
+        axis.text.y = element_text(size=12, face="bold"),
+        plot.title = element_text(size=22, face="bold"))
+```
+
+
+## Random States  
+```{r fig.width=8, fig.height=8, warning=FALSE, message=FALSE}
+set.seed(34)
+random_states <- sample(comb_data_pred$abbreviation, size=4)
+
+states_plot <- comb_data_pred %>%
+  filter(abbreviation %in% random_states,
+         is.na(Y) == TRUE)
+
+
+ggplot(states_plot, aes(date, truth)) +
+  geom_bar(stat="identity", fill="tan") +
+  geom_ribbon(aes(ymin=q0.05, ymax=q0.95),fill="steelblue", alpha = 0.3) +
+  geom_ribbon(aes(ymin=q0.25, ymax=q0.75),fill="steelblue", alpha = 0.5) +
+  geom_line(data=states_plot,
+            aes(date, q0.5)) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b-%Y") +
+  facet_grid(rows = vars(location_name), scales = "free_y") +
+  theme_classic() +
+  ylab("Hospitalizations") +
+  xlab(" ") +
+  theme_minimal() +
+  theme(panel.grid.minor = element_line(color = "gray90", linewidth = 0.25, linetype = 1),
+        panel.grid.major = element_line(color = "gray60", linewidth = 0.5, linetype = 1),
+        panel.background = element_blank(),
+        plot.background = element_blank(),
+        strip.text = element_text(size=14, face="bold"),
+        strip.background = element_blank(),
+        legend.position="none",
+        legend.text = element_text(size=12, face="bold"),
+        legend.title = element_text(size=16, face="bold"),
+        axis.title.x =  element_text(size=16, face="bold"),
+        axis.title.y = element_text(size=16, face="bold"),
+        axis.text.x =  element_text(size=14, face="bold", angle=60, hjust=1),
+        axis.text.y = element_text(size=12, face="bold"),
+        plot.title = element_text(size=22, face="bold"))
+```

@@ -27,8 +27,6 @@ website:
         contents:
           - index.qmd
           - explain.qmd 
-      - section: "Explore the Data"
-        contents:
           - explore.qmd
       - text: "---"
       - section: "Model Construction"
@@ -37,6 +35,10 @@ website:
           - construction/organize/organize.qmd
           - construction/model/model.qmd
           - construction/results/results.qmd
+      - text: "---"
+      - section: "Demonstrations"
+        contents:
+          - demo1.qmd
   page-footer:
     border: false
     left: "Published with [Quarto](https://quarto.org/) v1.2.335"
