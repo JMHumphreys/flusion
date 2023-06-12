@@ -21,9 +21,11 @@ editor_options:
 ---
 
 # Overview
-This page will show plots and figures describing the contents of the f(l)usion data set.     
+
+This page will show plots and figures describing the contents of the f(l)usion data set.
 
 ## Data description:
+
 ```{r warning=FALSE, message=FALSE}
 get_fusion <- function(url) {
   library(readr)
@@ -39,16 +41,18 @@ myFlusion <- as.data.frame(get_fusion(hub_url))
 head(myFlusion)
 ```
 
-#### Data attributes:  
-+ *date*: Date of the reported epidemiological week (epiweek) based on a Saturday start.  
-+ *year*: Year of estimate   
-+ *epiweek*: The epidemiological week   
-+ *abbreviation*: U.S. State or Territory abbreviation.  
-+ *location*: Numeric location code based on FIPS.  
-+ *location_name*: Name of U.S. State or Territory.  
-+ Columns beginning with *q_* provide the 0.025, 0.25, 0.5, 0.75, and 0.975 quantiles for estimated flu hospitalizations.  
-    
-## Plot National Totals   
+#### Data attributes:
+
+-   *date*: Date of the reported epidemiological week (epiweek) based on a Saturday start.\
+-   *year*: Year of estimate\
+-   *epiweek*: The epidemiological week\
+-   *abbreviation*: U.S. State or Territory abbreviation.\
+-   *location*: Numeric location code based on FIPS.\
+-   *location_name*: Name of U.S. State or Territory.\
+-   Columns beginning with *q\_* provide the 0.025, 0.25, 0.5, 0.75, and 0.975 quantiles for estimated flu hospitalizations.
+
+## Plot National Totals
+
 ```{r fig.width=8, fig.height=6, warning=FALSE, message=FALSE}
 library(tidyverse)
 options(dplyr.summarise.inform = FALSE, show_col_types = FALSE)
@@ -81,8 +85,9 @@ ggplot(natl_sums, aes(date, Q0.50)) +
         axis.text.y = element_text(size=12, face="bold"),
         plot.title = element_text(size=22, face="bold"))
 ```
-   
-## Plot States  
+
+## Plot States
+
 ```{r fig.width=8, fig.height=8, warning=FALSE, message=FALSE}
 set.seed(123)
 random_states <- sample(myFlusion$abbreviation, size=4)
@@ -116,8 +121,8 @@ ggplot(states_plot, aes(date, q_0.50)) +
 
 ```
 
-
 ## Short Term
+
 ```{r, warning=FALSE, message=FALSE}
 set.seed(111)
 random_states <- sample(myFlusion$abbreviation, size=4)
