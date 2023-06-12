@@ -24,7 +24,7 @@ editor_options:
 f(l)usion is a data set that provides estimates for hospitalizations that resulted from influenza. The data is estimated by a joint spatiotemporal model that joins (*fuses*) data from FluSurv, the Influenza Like Illness (ILI) data set, the NREVSS data set, and HHS reported incidence to produce estimates.  In a sense, flusion can be thought of as a historical reconstruction of past hospitalization based on signals (patterns and trends) captured in the contributing data sources.   
    
 ## What's it good for?  
-Flusion is intended to provide a complete and continuous source of data to train influnza forcasting modeling.  It is an analytic product to support other analytic products.  
+Flusion is intended to provide a complete and continuous source of data to train and support influenza forecasting modeling.  It is an analytic product to support other analytic products.  
 
 
 ![**In a picture**](images/share.png){width=890%}
