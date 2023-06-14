@@ -1,0 +1,15 @@
+/.quarto/
+.Rproj.user
+test.yml
+# data folder
+data/
+
+#model outputs
+runs/
+
+#adjacency matrix
+J
+
+#keys and passwords
+secrets.yaml
+/.quarto/

@@ -35,6 +35,7 @@ website:
           - construction/organize/organize.qmd
           - construction/model/model.qmd
           - construction/results/results.qmd
+          - construction/stratify/stratify.qmd
       - text: "---"
       - section: "Demonstrations"
         contents:

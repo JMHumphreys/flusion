@@ -5,7 +5,8 @@
       "/construction/model/model.html",
       "/construction/organize/organize.html",
       "/construction/preprocessing/preprocessing.html",
-      "/construction/results/results.html"
+      "/construction/results/results.html",
+      "/construction/stratify/stratify.html"
     ]
   }
 ]
