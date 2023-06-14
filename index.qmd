@@ -21,13 +21,13 @@ editor_options:
 
 <div>
 # Welcome  
-f(l)usion is a data set that provides estimates for hospitalizations that resulted from influenza. Weekly estimates are provided for 56 U.S. States and Territories from October 2010 through May 2023.  
+f(l)usion is a data set that provides estimates for hospitalizations that resulted from influenza. Weekly age group specific estimates are provided for 56 U.S. States and Territories from October 2010 through May 2023.  
       
 The f(l)usion data and the methods used to produce it are experimental and should not be considered as authoritative.    
       
 The menu at left provides links to explore f(l)usion and to overview the methods used to produce the data.    
        
 ### Download *f(l)usion* Data
-{{< downloadthis flusion/flusion_v1.csv dname=flusion-v1 label="Download Data" icon=download type=info class=data-button >}}    **f(l)usion v.1** (*2.4 mb, csv*)       
+{{< downloadthis flusion/flusion_v2.csv dname=flusion-v2 label="Download Data" icon=download type=info class=data-button >}}    **f(l)usion v.2** (*45 mb, csv*)       
 
 <div>

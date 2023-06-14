@@ -22,18 +22,21 @@ editor_options:
 
 # Overview
 
-This page will show plots and figures describing the contents of the f(l)usion data set.
+This page provides plots and figures describing the contents of the f(l)usion data set.
 
 ## Data description:
 
 ```{r warning=FALSE, message=FALSE}
+library(tidyverse)
+options(dplyr.summarise.inform = FALSE, show_col_types = FALSE)
+
 get_fusion <- function(url) {
   library(readr)
   df <- read_csv(url)
   return(df)
 }
 
-hub_url <- "https://github.com/JMHumphreys/flusion/raw/main/flusion/flusion_v1.csv"
+hub_url <- "https://github.com/JMHumphreys/flusion/raw/main/flusion/flusion_v2.csv"
 
 myFlusion <- as.data.frame(get_fusion(hub_url))
 
@@ -49,15 +52,61 @@ head(myFlusion)
 -   *abbreviation*: U.S. State or Territory abbreviation.\
 -   *location*: Numeric location code based on FIPS.\
 -   *location_name*: Name of U.S. State or Territory.\
--   Columns beginning with *q\_* provide the 0.025, 0.25, 0.5, 0.75, and 0.975 quantiles for estimated flu hospitalizations.
+-   *age_class*: Nine age group classes and an "overall" category for totals (all ages).\   
+-   Columns beginning with *q\_* provide the 0.025, 0.25, 0.5, 0.75, and 0.975 quantiles for estimated flu hospitalizations.   
+
+
+## Select Data  
+The *age_class* column defines data subsets that can be partitioned for analysis.
+```{r}
+unique(myFlusion$age_class)
+```
+
+## 2022-2023 Season by Age
+```{r fig.width=8,fig.height=7, warning=FALSE,message=FALSE}
+season2022_23 <- myFlusion %>% 
+  filter(age_class != "overall",
+         date >= as_date("2022-10-01"))
+
+ggplot(season2022_23, aes(date, q_0.50, fill=age_class), col = "transparent") +
+  geom_bar(position="stack", stat="identity") +
+   viridis::scale_fill_viridis("Age Group",
+                             discrete=T,
+                             option = "turbo",
+                             direction = -1,
+                             na.value = "white") +
+    scale_x_date(date_breaks = "2 week", date_labels = "%b-%d-%Y") +
+    xlab(" ") +
+    ylab("Hospitalizations") + 
+    ggtitle(" ") +
+    theme_classic() +
+    theme(plot.margin = unit(c(2,0.5,2,0.5), "cm"),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.background = element_blank(),
+      plot.background = element_blank(),
+      panel.border = element_blank(),
+      legend.title = element_text(size = 16, face = "bold", hjust=0.5),
+      legend.text = element_text(size=10, face="bold"),
+      strip.text = element_text(size=16, face="bold"),
+      strip.background = element_blank(),
+      legend.position = c(0.7, 0.5),
+      legend.direction = "vertical",
+      legend.key.width = unit(2,"line"),
+      axis.text.y = element_text(face="bold", size=14),
+      axis.text.x = element_text(face="bold", size=14, angle = 60, hjust=1),
+      axis.title.x = element_text(size=22, face="bold"),
+      axis.title.y = element_text(size=22, face="bold"),
+      plot.title = element_text(size=25, face="bold", hjust=0.5)) 
+
+```
+
 
 ## Plot National Totals
 
 ```{r fig.width=8, fig.height=6, warning=FALSE, message=FALSE}
-library(tidyverse)
-options(dplyr.summarise.inform = FALSE, show_col_types = FALSE)
-
 natl_sums <- myFlusion %>%
+  filter(age_class == "overall") %>%
   group_by(date) %>%
   summarise(Q0.25 = sum(q_0.25),
             Q0.50 = sum(q_0.50),
@@ -93,6 +142,7 @@ set.seed(123)
 random_states <- sample(myFlusion$abbreviation, size=4)
 
 states_plot <- myFlusion %>%
+   filter(age_class == "overall") %>%
   filter(abbreviation %in% random_states)
 
 ggplot(states_plot, aes(date, q_0.50)) +  
@@ -122,7 +172,6 @@ ggplot(states_plot, aes(date, q_0.50)) +
 ```
 
 ## Short Term
-
 ```{r, warning=FALSE, message=FALSE}
 set.seed(111)
 random_states <- sample(myFlusion$abbreviation, size=4)
@@ -132,6 +181,7 @@ random_yr <- sample(myFlusion$year, size=1)
 
 
 states_plot_yr <- myFlusion %>%
+   filter(age_class == "overall") %>%
   filter(abbreviation %in% random_states,
          year == random_yr | year == (random_yr + 1))
 
