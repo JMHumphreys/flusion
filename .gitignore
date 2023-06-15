@@ -1,6 +1,7 @@
 /.quarto/
 .Rproj.user
 test.yml
+.Rhistory
 # data folder
 data/
 

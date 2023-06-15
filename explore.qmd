@@ -52,17 +52,19 @@ head(myFlusion)
 -   *abbreviation*: U.S. State or Territory abbreviation.\
 -   *location*: Numeric location code based on FIPS.\
 -   *location_name*: Name of U.S. State or Territory.\
--   *age_class*: Nine age group classes and an "overall" category for totals (all ages).\   
--   Columns beginning with *q\_* provide the 0.025, 0.25, 0.5, 0.75, and 0.975 quantiles for estimated flu hospitalizations.   
+-   *age_class*: Nine age group classes and an "overall" category for totals (all ages). \
+-   Columns beginning with *q\_* provide the 0.025, 0.25, 0.5, 0.75, and 0.975 quantiles for estimated flu hospitalizations.
 
+## Select Data
 
-## Select Data  
 The *age_class* column defines data subsets that can be partitioned for analysis.
+
 ```{r}
 unique(myFlusion$age_class)
 ```
 
 ## 2022-2023 Season by Age
+
 ```{r fig.width=8,fig.height=7, warning=FALSE,message=FALSE}
 season2022_23 <- myFlusion %>% 
   filter(age_class != "overall",
@@ -100,7 +102,6 @@ ggplot(season2022_23, aes(date, q_0.50, fill=age_class), col = "transparent") +
       plot.title = element_text(size=25, face="bold", hjust=0.5)) 
 
 ```
-
 
 ## Plot National Totals
 
@@ -171,7 +172,8 @@ ggplot(states_plot, aes(date, q_0.50)) +
 
 ```
 
-## Short Term
+## Shorter Term
+
 ```{r, warning=FALSE, message=FALSE}
 set.seed(111)
 random_states <- sample(myFlusion$abbreviation, size=4)

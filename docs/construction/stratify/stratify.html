@@ -1033,8 +1033,8 @@ pre {
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>naive_stratify <span class="ot">&lt;-</span> <span class="cf">function</span>(flus_data, rate_est){</span>
 <span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">#date range for analysis</span></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  min_date <span class="ot">&lt;-</span> <span class="fu">min</span>(flusion<span class="sc">$</span>date) <span class="co">#flusion date</span></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  max_date <span class="ot">&lt;-</span> <span class="fu">max</span>(esti_rates<span class="sc">$</span>date) <span class="co">#FluSurv date</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  min_date <span class="ot">&lt;-</span> <span class="fu">min</span>(flus_data<span class="sc">$</span>date) <span class="co">#flusion date</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  max_date <span class="ot">&lt;-</span> <span class="fu">max</span>(rate_est<span class="sc">$</span>date) <span class="co">#FluSurv date</span></span>
 <span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">#age groups</span></span>
 <span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  age_grps <span class="ot">&lt;-</span> <span class="fu">unique</span>(rate_est<span class="sc">$</span>age_class)</span>

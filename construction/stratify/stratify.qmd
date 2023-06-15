@@ -436,8 +436,8 @@ Function to apply rates (proportionally) and then join data sets.
 naive_stratify <- function(flus_data, rate_est){
   
   #date range for analysis
-  min_date <- min(flusion$date) #flusion date
-  max_date <- max(esti_rates$date) #FluSurv date
+  min_date <- min(flus_data$date) #flusion date
+  max_date <- max(rate_est$date) #FluSurv date
   
   #age groups
   age_grps <- unique(rate_est$age_class)
