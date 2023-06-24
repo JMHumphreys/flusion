@@ -1,5 +1,5 @@
 
-![ ](images/flusion_big.png){width=500%}
+![ ](images/flusion_big.png)
 
     
 
